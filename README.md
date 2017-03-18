@@ -1,6 +1,6 @@
-# MMAmeta
+# metaMMA
 
-MMAmeta is for pleX users who add popular MMA event videos to their server.  It can monitor your completed downloads directory, move the video files, rename the video files, add a .nfo file with pertinent meta-data, and add event posters.
+metaMMA is for pleX users who add popular MMA event videos to their server.  It can monitor your completed downloads directory, move the video files, rename the video files, add a .nfo file with pertinent meta-data, and add event posters.
 
 
 ## Major Features Include:
@@ -21,10 +21,10 @@ MMAmeta is for pleX users who add popular MMA event videos to their server.  It 
 ## Screenshots
 ***
 Main Screen
-![Main Screen](https://github.com/MMAmeta/MMAmeta/blob/master/screenshots/main_screen.png)
+![Main Screen](https://github.com/metaMMA/metaMMA/blob/master/screenshots/main_screen.png)
 
 Individual Event with prelims and early prelims as 'extras'
-![Individual Event](https://github.com/MMAmeta/MMAmeta/blob/master/screenshots/event_with_prelims.png)
+![Individual Event](https://github.com/metaMMA/metaMMA/blob/master/screenshots/event_with_prelims.png)
 
 Expanded 'plot' showing all fight cards
-![Showing Fight Cards](https://github.com/MMAmeta/MMAmeta/blob/master/screenshots/all_fight_cards.png)
+![Showing Fight Cards](https://github.com/metaMMA/metaMMA/blob/master/screenshots/all_fight_cards.png)
