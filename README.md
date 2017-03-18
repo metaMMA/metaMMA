@@ -17,3 +17,14 @@ MMAmeta is for pleX users who add popular MMA event videos to their server.  It 
 ## License
  * [GNU GPL v3](http://www.gnu.org/licenses/gpl.html)
  * Copyright 2017
+
+## Screenshots
+***
+Main Screen
+![Main Screen](https://github.com/MMAmeta/MMAmeta/blob/master/screenshots/main_screen.png)
+
+Individual Event with prelims and early prelims as 'extras'
+![Individual Event](https://github.com/MMAmeta/MMAmeta/blob/master/screenshots/event_with_prelims.png)
+
+Expanded 'plot' showing all fight cards
+![Showing Fight Cards](https://github.com/MMAmeta/MMAmeta/blob/master/screenshots/all_fight_cards.png)
