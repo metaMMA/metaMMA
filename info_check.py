@@ -44,7 +44,7 @@ elif user_info.linux == 1:
         info_updated = 1
         if b_updated == 2:
             b_direct = '/home/'+user_info.linux_username+'/.MMA/Bellator/'
-            b_poster = '/home/'+user_info.linux_username+'/.MMAmeta/b_posters/'
+            b_poster = '/home/'+user_info.linux_username+'/.metaMMA/b_posters/'
             b_updated = 1
 elif user_info.mac == 1:
     if user_info.mac_username == 'userQQQ':
@@ -56,7 +56,7 @@ elif user_info.mac == 1:
         info_updated = 1
         if b_updated == 2:
             b_direct = '/Users/'+user_info.mac_username+'/.MMA/Bellator/'
-            b_poster = '/Users/'+user_info.mac_username+'/.MMAmeta/b_posters/'
+            b_poster = '/Users/'+user_info.mac_username+'/.metaMMA/b_posters/'
             b_updated = 1
 elif user_info.windows == 1:
     mma_direct = 'C:\\.MMA\\'
@@ -64,7 +64,7 @@ elif user_info.windows == 1:
     info_updated = 1
     if b_updated == 2:
         b_direct = 'C:\\.MMA\\Bellator\\'
-        b_poster = 'C:\\.MMAmeta\\b_posters\\'
+        b_poster = 'C:\\.metaMMA\\b_posters\\'
         b_updated = 1
 else:
     print('Unknown error in user info. Please take a closer look at your input.')
