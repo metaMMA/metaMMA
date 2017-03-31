@@ -22,12 +22,12 @@ metaMMA is for pleX users who add popular MMA event videos to their server.  It 
 ## Screenshots
 ***
 Plex Dashboard
-![Plex Dashboard](https://github.com/metaMMA/metaMMA/blob/master/github_images/plex_dashboard.png)
+![Plex Dashboard](https://raw.githubusercontent.com/metaMMA/metaMMA/master/github_images/plex_dashboard.png)
 
 Individual Event with Prelims as 'Extras'
-![Individual Event](https://github.com/metaMMA/metaMMA/blob/master/github_images/event_with_prelims.png)
+![Individual Event](https://raw.githubusercontent.com/metaMMA/metaMMA/master/github_images/event_with_prelims.png)
 
 Expanded 'Plot' Showing All Fight Cards
-![Showing Fight Cards](https://github.com/metaMMA/metaMMA/blob/master/github_images/event_with_fight_cards.png)
+![Showing Fight Cards](https://raw.githubusercontent.com/metaMMA/metaMMA/master/github_images/event_with_fight_cards.png)
 
 v0.3 - latest stable version
