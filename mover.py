@@ -104,6 +104,9 @@ if len(video_holder_path) < 1:
 #    logger("There were no holder files in the destination directory, therefore no files to look for. The script will stop running now.")
     exit_stats()
 
+badwords = ['weigh-i[a-z]+','dana','post.fight','720p','webrip','breakdown','the.fly','inside','road','history','vlog','now','countdown','h264','press.conference','greatest.fighters']
+big_regex = re.compile('|'.join(badwords))
+
 for x in range(0,len(video_holder_filename)):
     holder_search_terms1 = video_holder_filename[x].lower()
     holder_search_terms = holder_search_terms1.split()
@@ -119,7 +122,10 @@ for x in range(0,len(video_holder_filename)):
         completed_video_name_no_leading_s = re.sub(r's(?=[0-9][0-9])','',completed_video_name_no_spaces) #This is for files like 'The Ultimate Fighter S25 Finale.mp4'
         complete_video_name_early_fix = re.sub(r'[E|e].*[R|r][L|l][Y|y]',r'early',completed_video_name_no_leading_s) # replaces "Erly" typo that is common with "early" to standardize
         completed_video_name_fixed = re.sub(r'[P|p][R|r][E|e][L|l][I|i][a-zA-Z]+',r'prelim',complete_video_name_early_fix) # replaces any version of "PRELIMINARY/prelims" with "prelim" to standardize the search term
-        video_name_search_terms = completed_video_name_fixed.rsplit(".")
+        fix = big_regex.sub('', completed_video_name_prelim_fixed) # removes all prohibited words from filename
+        fix2 = re.sub(r'\.+',' ',fix) # replaced all dots left after removing prohibited words
+        fix3 = fix2.lstrip() # strips a leading whitespace, if the filename started with a prohibited word
+        video_name_search_terms = fix3.rsplit(" ")
         if set(video_name_search_terms).issuperset(holder_search_terms):
             if 'mkv' in video_name_search_terms: v_end = '.mkv'
             else: v_end ='.mp4'
