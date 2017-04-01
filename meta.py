@@ -58,6 +58,7 @@ else:
 
 promos_with_events_today = []
 promos_without_future_dates = []
+far_away = []
 f = open(info_check.mma_direct+'event_dates.txt', "r" )
 lines = []
 for line in f:
@@ -70,6 +71,8 @@ for line in f:
     next_wanted_event_date_object = datetime.strptime(next_wanted_event_date,'%Y-%m-%d')
     dif = (next_wanted_event_date_object - today_date_object).days # number of days until the MMA events that is saved in the event_dates text file
     if next_wanted_event_date != '2050-01-01':
+        if dif > 11:
+            far_away.append(date_and_promo[11:])
         if dif > -1:
             logger("The next scheduled "+date_and_promo[11:]+" event is still "+str(dif+1)+" days away.")
         else:
@@ -92,12 +95,19 @@ if len(promos_without_future_dates) > 0: # Only check wikipedia for new event da
                 event2.future('unverified')
         except Exception as e:
             logger2.exception(e)
+        try:
+            for v in range(0,len(far_away)):
+                logger(far_away[v]+' event is more than two weeks away. Checking to see if a new event is happening sooner or the date has been moved up.')
+                event3 = event_info.Event(dic[far_away[v]])
+                event3.future('unverified')
+        except Exception as e:
+            logger2.exception(e)
 if len(promos_with_events_today) < 1:
     logger("There are no MMA events taking place today. Exiting script.")
     exit_stats()
 else:
     try:
-        #if waited == 0:
+        if waited == 0:
             time.sleep(random.randint(5,1200))
         for y in range(0,len(promos_with_events_today)):
             logger(promos_with_events_today[y]+" has an event taking place today. Attempting to find a future event date.")
