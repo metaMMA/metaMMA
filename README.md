@@ -14,7 +14,7 @@ metaMMA is for Plex users who add popular MMA event videos to their server.  It 
  * [Plex Media Server](https://www.plex.tv/downloads/) with [.nfo importer](https://forums.plex.tv/discussion/38402/metadata-agents-for-exported-xbmc-library) installed
 
 ## Installation
- * [Linux](https://github.com/metaMMA/metaMMA/wiki/Linux)
+ * [Linux & Pi](https://github.com/metaMMA/metaMMA/wiki/Linux-&-Pi)
  * [macOS](https://github.com/metaMMA/metaMMA/wiki/MacOS)
  * [Windows](https://github.com/metaMMA/metaMMA/wiki/Windows)
 
