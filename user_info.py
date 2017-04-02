@@ -24,9 +24,12 @@ glr_destination = '/media/QQQ/Glory/'
 tmp_dir = '/media/QQQ/tmp/'
 done_dir = '/media/QQQ/done/'
 refresh_plex = 1
-refresh_kodi = 0
 plex_username = 'QQQ'
 plex_password = 'QQQ'
 plex_ip = '192.168.QQQ.QQQ'
+refresh_kodi = 0
+kodi_username = 'QQQ'
+kodi_password = 'QQQ'
+kodi_ip = '192.168.QQQ.QQQ'
 mma_lib = 'QQQ'
 #______________________________________________________________

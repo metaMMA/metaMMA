@@ -35,11 +35,21 @@ def exit_stats():
     f.close()
     endit()
 
-time.sleep(random.randint(5,600))
 vdata = open(info_check.meta+'version.txt','r')
 v = vdata.read()
 version = re.sub('\n','',v[1:])
 vdata.close()
+
+f = open(info_check.mma_direct+'stats.txt','r')
+filedata = f.read()
+f.close()
+newdata = re.sub(r'\[.*last time updater\.py was started.*[0-9]','['+time.strftime("%Y-%m-%d %H:%M:%S")+'] - last time updater.py was started. ---------Current: v'+version,filedata)
+f = open(info_check.mma_direct+'stats.txt','w')
+f.write(newdata)
+f.close()
+
+time.sleep(random.randint(5,600))
+
 for try_count in range(0,2):
     try_count += 1
     if os.path.isfile(info_check.mma_direct+'mover.running'):
@@ -66,14 +76,6 @@ with open(info_check.mma_direct+'mover.running', "w") as running:
     running.write('['+time.strftime("%Y-%m-%d %H:%M:%S")+'] updater.py')
     running.close()
 
-f = open(info_check.mma_direct+'stats.txt','r')
-filedata = f.read()
-f.close()
-newdata = re.sub(r'\[.*last time updater\.py was started.*[0-9]','['+time.strftime("%Y-%m-%d %H:%M:%S")+'] - last time updater.py was started. ---------Current: v'+version,filedata)
-f = open(info_check.mma_direct+'stats.txt','w')
-f.write(newdata)
-f.close()
-
 readme = urllib.request.urlopen('https://github.com/metaMMA/metaMMA/blob/master/README.md').read().decode('utf-8')
 
 latest_version_line = re.findall(r'<p>v.*? - latest stable version</p>',readme)[0]
@@ -96,13 +98,10 @@ if StrictVersion(latest_version_num) > StrictVersion(version):
     move(info_check.home+'metaMMA', info_check.meta)
 
     if os.path.isfile(info_check.meta+'user_info.py'):
-        ###############################################
         old_user_info = open(os.path.join(info_check.home+'.metaMMAold','')+'user_info.py','r')
         old_user_info_block = old_user_info.read()
         old_user_info.close()
-
         new_generic_user_info = open(info_check.meta+'user_info.py').readlines()
-
         updated_user_info = open(info_check.meta+'user_info2.py','a')
         for line in new_generic_user_info:
         	place = line.find('=')
@@ -118,11 +117,7 @@ if StrictVersion(latest_version_num) > StrictVersion(version):
         os.remove(info_check.meta+'user_info.py') #remove the new stock user_info.py file
         logger.info("Attempting to rename updated user_info.py.")
         copyfile(info_check.meta+'user_info2.py',info_check.meta+'user_info.py')
-        #################################################
-        #logger.info("Attempting to delete generic user_info file from new download.")
-        #os.remove(info_check.meta+'user_info.py') #remove the new stock user_info.py file
-        #logger.info("Attempting to move user_info.py from .metaMMAold to .metaMMA directory.")
-        #copyfile(os.path.join(os.path.join(info_check.home,'.metaMMAold'),'')+'user_info.py',info_check.meta+'user_info.py') #copy old user_info.py file to current metaMMA directory
+
 vdata = open(info_check.meta+'version.txt','r')
 v = vdata.read()
 version = re.sub('\n','',v[1:])
