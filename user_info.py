@@ -1,28 +1,30 @@
 #!/usr/bin/env python
 #______________________________________________________________
 
-MMA = 0
+MMA = 2
 mma_destination = '/media/QQQ/MMA/'
-UFC = 1
+UFC = 2
 ufc_destination = '/media/QQQ/UFC/'
-Bellator = 1
+Bellator = 2
 bel_destination = '/media/QQQ/Bellator/'
-Invicta = 1
+Invicta = 2
 inv_destination = '/media/QQQ/Invicta/'
-WSOF = 1
+WSOF = 2
 wsof_destination = '/media/QQQ/WSOF/'
-Titan = 1
+Titan = 2
 ttn_destination = '/media/QQQ/Titan FC/'
-Legacy = 1
+Legacy = 2
 lfa_destination = '/media/QQQ/Legacy/'
-ONE = 1
+ONE = 2
 one_destination = '/media/QQQ/One/'
-Glory = 1
+Glory = 2
 glr_destination = '/media/QQQ/Glory/'
 #______________________________________________________________
 
 tmp_dir = '/media/QQQ/tmp/'
 done_dir = '/media/QQQ/done/'
+refresh_plex = 1
+refresh_kodi = 0
 plex_username = 'QQQ'
 plex_password = 'QQQ'
 plex_ip = '192.168.QQQ.QQQ'
