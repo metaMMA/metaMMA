@@ -116,7 +116,7 @@ if StrictVersion(latest_version_num) > StrictVersion(version):
         logger.info("Attempting to delete generic user_info file from new download.")
         os.remove(info_check.meta+'user_info.py') #remove the new stock user_info.py file
         logger.info("Attempting to rename updated user_info.py.")
-        copyfile(info_check.meta+'user_info2.py',info_check.meta+'user_info.py')
+        move(info_check.meta+'user_info2.py',info_check.meta+'user_info.py')
 
 vdata = open(info_check.meta+'version.txt','r')
 v = vdata.read()
