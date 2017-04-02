@@ -3,21 +3,21 @@
 
 MMA = 0
 mma_destination = '/media/QQQ/MMA/'
-UFC = 0
+UFC = 1
 ufc_destination = '/media/QQQ/UFC/'
-Bellator = 0
+Bellator = 1
 bel_destination = '/media/QQQ/Bellator/'
-Invicta = 0
+Invicta = 1
 inv_destination = '/media/QQQ/Invicta/'
-WSOF = 0
+WSOF = 1
 wsof_destination = '/media/QQQ/WSOF/'
-Titan = 0
+Titan = 1
 ttn_destination = '/media/QQQ/Titan FC/'
-Legacy = 0
+Legacy = 1
 lfa_destination = '/media/QQQ/Legacy/'
-ONE = 0
+ONE = 1
 one_destination = '/media/QQQ/One/'
-Glory = 0
+Glory = 1
 glr_destination = '/media/QQQ/Glory/'
 #______________________________________________________________
 

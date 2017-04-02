@@ -15,18 +15,17 @@ import urllib
 import urllib.request
 import fileinput
 import sys
+import logging
 
-ts = "["+time.strftime("%Y-%m-%d %H:%M:%S")+"] " # timestamp string used at beginning of log file
-addts = "\n"+ts # timestamp string used after beginning of log file
+logging.basicConfig(filename=info_check.mma_direct+"log.txt",level=logging.DEBUG,format='[%(asctime)s] %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
+logger = logging.getLogger(__name__)
 buf = "\n                      " # buffer space for mult-line log entries
+dic = {'Invicta FC':'inv','Bellator':'bel','UFC':'ufc','WSOF':'wsof','Titan FC':'ttn','Legacy Fighting Alliance':'lfa','ONE Championship':'one','Glory':'glr'}
+i_dic = {v: k for k, v in dic.items()}
 
 if info_check.info_updated == 0 or not os.path.exists(info_check.mma_direct):
     exit()
 
-def logger(loginfo):
-    with open(info_check.mma_direct+"log.txt", "a") as log:
-        log.write(addts+loginfo)
-        log.close()
 def endit():
     os.remove(info_check.mma_direct+'mover.running')
     exit()
@@ -35,7 +34,7 @@ def exit_stats():
     f = open(info_check.mma_direct+'stats.txt','r')
     filedata = f.read()
     f.close()
-    newdata = re.sub(r'.*last time %s successfully exited.' % os.path.basename(__file__),ts+'- last time %s successfully exited.' % os.path.basename(__file__),filedata)
+    newdata = re.sub(r'.*last time %s successfully exited.' % os.path.basename(__file__),'['+time.strftime("%Y-%m-%d %H:%M:%S")+'] - last time %s successfully exited.' % os.path.basename(__file__),filedata)
     f = open(info_check.mma_direct+'stats.txt','w')
     f.write(newdata)
     f.close()
@@ -49,17 +48,17 @@ if os.path.isfile(info_check.mma_direct+'mover.running'):
     running_script = running.read()
     running.close()
     log = open(info_check.mma_direct+'execution-log.txt','a')
-    log.write(addts+"An attempt to run mover.py was made. However, "+running_script[22:]+" is currently running. The script will stop running now.")
+    log.write("\n["+time.strftime("%Y-%m-%d %H:%M:%S")+"] An attempt to run mover.py was made. However, "+running_script[22:]+" is currently running. The script will stop running now.")
     log.close()
     exit_stats()
 else:
     with open(info_check.mma_direct+'mover.running', "w") as running:
-        running.write(ts+"mover.py")
+        running.write("["+time.strftime("%Y-%m-%d %H:%M:%S")+"] mover.py")
         running.close()
     f = open(info_check.mma_direct+'stats.txt','r')
     filedata = f.read()
     f.close()
-    newdata = re.sub(r'.*last time mover.py was started.',ts+'- last time mover.py was started.',filedata)
+    newdata = re.sub(r'.*last time mover.py was started.','['+time.strftime("%Y-%m-%d %H:%M:%S")+'] - last time mover.py was started.',filedata)
     f = open(info_check.mma_direct+'stats.txt','w')
     f.write(newdata)
     f.close()
@@ -87,7 +86,7 @@ if 4 < hour_int < 5:
                 if exc.errno != errno.EEXIST:
                     raise
         with open(filename, "w") as log:
-            log.write(ts+" New log.txt file created. For the previous 3 weeks of logs, open previous-log.txt.")
+            log.write("["+time.strftime("%Y-%m-%d %H:%M:%S")+"] New log.txt file created. For the previous 3 weeks of logs, open previous-log.txt.")
             log.close()
 
 video_holder_filename = [] # this list will contain all the "holder" filenames that are waiting for a video file to replace them
@@ -101,7 +100,7 @@ for root, dirnames, filenames in os.walk(user_info.mma_destination): # this dire
         h_filename = open(os.path.join(root,filename),'r').read()
         video_holder_filename.append(h_filename)
 if len(video_holder_path) < 1:
-#    logger("There were no holder files in the destination directory, therefore no files to look for. The script will stop running now.")
+#    logger.info("There were no holder files in the destination directory, therefore no files to look for. The script will stop running now.")
     exit_stats()
 
 badwords = ['weigh-i[a-z]+','dana','post.fight','720p','webrip','breakdown','the.fly','inside','road','history','vlog','now','countdown','h264','press.conference','greatest.fighters']
@@ -120,8 +119,8 @@ for x in range(0,len(video_holder_filename)):
         completed_video_name_lower = completed_video_filename[y].lower()
         completed_video_name_no_spaces = completed_video_name_lower.replace(" ",".")
         completed_video_name_no_leading_s = re.sub(r's(?=[0-9][0-9])','',completed_video_name_no_spaces) #This is for files like 'The Ultimate Fighter S25 Finale.mp4'
-        complete_video_name_early_fix = re.sub(r'[E|e].*[R|r][L|l][Y|y]',r'early',completed_video_name_no_leading_s) # replaces "Erly" typo that is common with "early" to standardize
-        completed_video_name_fixed = re.sub(r'[P|p][R|r][E|e][L|l][I|i][a-zA-Z]+',r'prelim',complete_video_name_early_fix) # replaces any version of "PRELIMINARY/prelims" with "prelim" to standardize the search term
+        complete_video_name_early_fix = re.sub(r'[E|e].?[R|r][L|l][Y|y]',r'early',completed_video_name_no_leading_s) # replaces "Erly" typo that is common with "early" to standardize
+        completed_video_name_prelim_fixed = re.sub(r'[P|p][R|r][E|e][L|l][I|i][a-zA-Z]+',r'prelim',complete_video_name_early_fix) # replaces any version of "PRELIMINARY/prelims" with "prelim" to standardize the search term
         fix = big_regex.sub('', completed_video_name_prelim_fixed) # removes all prohibited words from filename
         fix2 = re.sub(r'\.+',' ',fix) # replaced all dots left after removing prohibited words
         fix3 = fix2.lstrip() # strips a leading whitespace, if the filename started with a prohibited word
@@ -138,8 +137,8 @@ for x in range(0,len(video_holder_filename)):
             elif set(holder_search_terms).issuperset(['lfa']): stat_name = 'lfa'
             else: stat_name = 'ufc'
             if ('early' in video_name_search_terms) and ('early' in holder_search_terms):
-                logger("Video found at"+buf+completed_video_path_and_filename[y]+buf+"will be copied to"+buf+video_holder_path[x]+"Early Prelims"+v_end+buf+"and"+buf+video_holder_path_and_file[x]+buf+"will be deleted.")
-                copyfile(completed_video_path_and_filename[y], video_holder_path[x]+'Early Prelims'+v_end)
+                logger.info("Video found at"+buf+completed_video_path_and_filename[y]+buf+"will be copied to"+buf+os.path.join(video_holder_path[x],'')+"Early Prelims"+v_end+buf+"and"+buf+video_holder_path_and_file[x]+buf+"will be deleted.")
+                copyfile(completed_video_path_and_filename[y], os.path.join(video_holder_path[x],'')+'Early Prelims'+v_end)
                 for line in fileinput.input(info_check.mma_direct+'stats.txt'):
                     temp = sys.stdout
                     sys.stdout = open(info_check.mma_direct+'stats2.txt', 'a')
@@ -155,21 +154,21 @@ for x in range(0,len(video_holder_filename)):
                 os.remove(info_check.mma_direct+'stats.txt')
                 os.rename(info_check.mma_direct+'stats2.txt',info_check.mma_direct+'stats.txt')
                 os.remove(video_holder_path_and_file[x])
-                whole_dir_plus = video_holder_path[x]
-                whole_dir = whole_dir_plus[:-10]
-                logger("Directory"+buf+whole_dir+buf+"will be moved to "+buf+user_info.tmp_dir+buf+"to remove from pleX.")
+                whole_dir_plus = os.path.join(video_holder_path[x],'')
+                whole_dir = whole_dir_plus[:-11]
+                logger.info("Directory"+buf+whole_dir+buf+"will be moved to "+buf+user_info.tmp_dir+buf+"to remove from pleX.")
                 move(whole_dir,user_info.tmp_dir)
                 plex_refresh()
                 time.sleep(30)
-                logger("Directories and files will be moved back to"+buf+os.path.abspath(os.path.join(os.path.join(video_holder_path[x], os.pardir),os.pardir))+buf+"in order to force pleX to refresh. The script will stop running now.")
+                logger.info("Directories and files will be moved back to"+buf+os.path.abspath(os.path.join(os.path.join(video_holder_path[x], os.pardir),os.pardir))+buf+"in order to force pleX to refresh. The script will stop running now.")
                 for node in os.listdir(user_info.tmp_dir):
                     if not os.path.isdir(node):
                         move(os.path.join(user_info.tmp_dir, node) , os.path.join(os.path.abspath(os.path.join(os.path.join(video_holder_path[x], os.pardir),os.pardir)), node))
                         plex_refresh()
                 exit_stats()
             elif ('prelim' in video_name_search_terms) and ('prelim' in holder_search_terms) and ('early' not in video_name_search_terms) and ('early' not in holder_search_terms):
-                logger("Video found at"+buf+completed_video_path_and_filename[y]+buf+"will be copied to"+buf+video_holder_path[x]+"Prelims"+v_end+buf+"and"+buf+video_holder_path_and_file[x]+buf+"will be deleted.")
-                copyfile(completed_video_path_and_filename[y], video_holder_path[x]+'Prelims'+v_end)
+                logger.info("Video found at"+buf+completed_video_path_and_filename[y]+buf+"will be copied to"+buf+os.path.join(video_holder_path[x],'')+"Prelims"+v_end+buf+"and"+buf+video_holder_path_and_file[x]+buf+"will be deleted.")
+                copyfile(completed_video_path_and_filename[y], os.path.join(video_holder_path[x],'')+'Prelims'+v_end)
                 for line in fileinput.input(info_check.mma_direct+'stats.txt'):
                     temp = sys.stdout
                     sys.stdout = open(info_check.mma_direct+'stats2.txt', 'a')
@@ -185,13 +184,13 @@ for x in range(0,len(video_holder_filename)):
                 os.remove(info_check.mma_direct+'stats.txt')
                 os.rename(info_check.mma_direct+'stats2.txt',info_check.mma_direct+'stats.txt')
                 os.remove(video_holder_path_and_file[x])
-                whole_dir_plus = video_holder_path[x]
-                whole_dir = whole_dir_plus[:-10]
-                logger("Directory"+buf+whole_dir+buf+"will be moved to "+buf+user_info.tmp_dir+buf+"to remove from pleX.")
+                whole_dir_plus = os.path.join(video_holder_path[x],'')
+                whole_dir = whole_dir_plus[:-11]
+                logger.info("Directory"+buf+whole_dir+buf+"will be moved to "+buf+user_info.tmp_dir+buf+"to remove from pleX.")
                 move(whole_dir,user_info.tmp_dir)
                 plex_refresh()
                 time.sleep(30)
-                logger("Directories and files will be moved back to"+buf+os.path.abspath(os.path.join(os.path.join(video_holder_path[x], os.pardir),os.pardir))+buf+"in order to force pleX to refresh. The script will stop running now.")
+                logger.info("Directories and files will be moved back to"+buf+os.path.abspath(os.path.join(os.path.join(video_holder_path[x], os.pardir),os.pardir))+buf+"in order to force pleX to refresh. The script will stop running now.")
                 for node in os.listdir(user_info.tmp_dir):
                     if not os.path.isdir(node):
                         move(os.path.join(user_info.tmp_dir, node) , os.path.join(os.path.abspath(os.path.join(os.path.join(video_holder_path[x], os.pardir),os.pardir)), node))
@@ -199,8 +198,8 @@ for x in range(0,len(video_holder_filename)):
                 exit_stats()
             elif ('early' not in video_name_search_terms) and ('prelim' not in video_name_search_terms) and ('early' not in holder_search_terms) and ('prelim' not in holder_search_terms):
                 title = os.path.basename(os.path.normpath(video_holder_path[x]))
-                logger("Video found at"+buf+completed_video_path_and_filename[y]+buf+"will be copied to"+buf+video_holder_path[x]+title+v_end)
-                copyfile(completed_video_path_and_filename[y], video_holder_path[x]+title+v_end)
+                logger.info("Video found at"+buf+completed_video_path_and_filename[y]+buf+"will be copied to"+buf+os.path.join(video_holder_path[x],'')+title+v_end)
+                copyfile(completed_video_path_and_filename[y], os.path.join(video_holder_path[x],'')+title+v_end)
                 for line in fileinput.input(info_check.mma_direct+'stats.txt'):
                     temp = sys.stdout
                     sys.stdout = open(info_check.mma_direct+'stats2.txt', 'a')
@@ -215,33 +214,33 @@ for x in range(0,len(video_holder_filename)):
                     sys.stdout = temp
                 os.remove(info_check.mma_direct+'stats.txt')
                 os.rename(info_check.mma_direct+'stats2.txt',info_check.mma_direct+'stats.txt')
-                logger("Poster will be renamed to match recently moved Main Card.")
+                logger.info("Poster will be renamed to match recently moved Main Card.")
                 for basename in os.listdir(video_holder_path[x]):
                     if basename.endswith('.jpg'):
                         pathname = os.path.join(video_holder_path[x], basename)
                         if os.path.isfile(pathname):
-                            move(pathname, video_holder_path[x]+title+".jpg")
-                logger("nfo file will be updated, and \"Soon - \" will be removed from before the title.")
-                old_nfo = open(video_holder_path[x]+title+'.nfo','r')
-                new_nfo = open(video_holder_path[x]+title+'2.nfo', 'w')
+                            move(pathname, os.path.join(video_holder_path[x],'')+title+".jpg")
+                logger.info("nfo file will be updated, and \"Soon - \" will be removed from before the title.")
+                old_nfo = open(os.path.join(video_holder_path[x],'')+title+'.nfo','r')
+                new_nfo = open(os.path.join(video_holder_path[x],'')+title+'2.nfo', 'w')
                 for line in old_nfo:
                     new_nfo.write(line.replace('Soon - ', ''))
                 old_nfo.close()
                 new_nfo.close()
-                os.remove(video_holder_path[x]+title+'.nfo')
-                move(video_holder_path[x]+title+'2.nfo',video_holder_path[x]+title+'.nfo')
-                logger(video_holder_path_and_file[x]+" will be deleted.")
+                os.remove(os.path.join(video_holder_path[x],'')+title+'.nfo')
+                move(os.path.join(video_holder_path[x],'')+title+'2.nfo',os.path.join(video_holder_path[x],'')+title+'.nfo')
+                logger.info(video_holder_path_and_file[x]+" will be deleted.")
                 os.remove(video_holder_path_and_file[x])
-                logger("Directory"+buf+video_holder_path[x]+buf+"will be moved to "+buf+user_info.tmp_dir+buf+"to remove from pleX.")
-                move(video_holder_path[x],user_info.tmp_dir)
+                logger.info("Directory"+buf+os.path.join(video_holder_path[x],'')+buf+"will be moved to "+buf+user_info.tmp_dir+buf+"to remove from pleX.")
+                move(os.path.join(video_holder_path[x],''),user_info.tmp_dir)
                 plex_refresh()
                 time.sleep(30)
-                logger("Directories and files will be moved back to"+buf+os.path.abspath(os.path.join(video_holder_path[x], os.pardir))+buf+"in order to force pleX to refresh. The script will stop running now.")
+                logger.info("Directories and files will be moved back to"+buf+os.path.abspath(os.path.join(video_holder_path[x], os.pardir))+buf+"in order to force pleX to refresh. The script will stop running now.")
                 for node in os.listdir(user_info.tmp_dir):
                     if not os.path.isdir(node):
                         move(os.path.join(user_info.tmp_dir, node) , os.path.join(os.path.abspath(os.path.join(video_holder_path[x], os.pardir)), node))
                         plex_refresh()
                 exit_stats()
 
-#logger("There were holder files in the destination directory, but there were no matching video files in your source directory. The script will stop running now.")
+#logger.info("There were holder files in the destination directory, but there were no matching video files in your source directory. The script will stop running now.")
 exit_stats()

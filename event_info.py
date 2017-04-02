@@ -12,29 +12,22 @@ from datetime import datetime
 from shutil import copyfile
 import logging
 
-ts = "["+time.strftime("%Y-%m-%d %H:%M:%S")+"] " # timestamp string used at beginning of log file
-addts = "\n"+ts # timestamp string used after beginning of log file
+if os.path.isfile(info_check.mma_direct+"log.txt"):
+    logging.basicConfig(filename=info_check.mma_direct+"log.txt",level=logging.DEBUG,format='[%(asctime)s] %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
+    logger = logging.getLogger(__name__)
 buf = "\n                      " # buffer space for mult-line log entries
 dic = {'Invicta FC':'inv','Bellator':'bel','UFC':'ufc','WSOF':'wsof','Titan FC':'ttn','Legacy Fighting Alliance':'lfa','ONE Championship':'one','Glory':'glr'}
 i_dic = {v: k for k, v in dic.items()}
-if os.path.isfile(info_check.mma_direct+"log.txt"):
-    logging.basicConfig(filename=info_check.mma_direct+"log.txt", level=logging.DEBUG, format=ts+' %(levelname)s %(name)s %(message)s')
-    logger2=logging.getLogger(__name__)
 today_date_object = datetime.now()
 today_str = today_date_object.strftime('%Y-%m-%d')
 
-def logger(loginfo):
-    if os.path.isfile(info_check.mma_direct+"log.txt"):
-        with open(info_check.mma_direct+"log.txt", "a") as log:
-            log.write(addts+loginfo)
-            log.close()
 class Event:
     def __init__(self,promo):
         self.promo = promo
 
     def future(self,birth):
         time.sleep(random.randint(10,20))
-        logger("Opening and reading wikipedia page containing "+i_dic[self.promo]+" events.")
+        logger.info("Opening and reading wikipedia page containing "+i_dic[self.promo]+" events.")
         if self.promo == 'ufc':wiki = urllib.request.urlopen('https://en.wikipedia.org/wiki/List_of_UFC_events').read().decode('utf-8')
         elif self.promo == 'inv':wiki = urllib.request.urlopen('https://en.wikipedia.org/wiki/Invicta_Fighting_Championships').read().decode('utf-8')
         elif self.promo == 'bel':wiki = urllib.request.urlopen('https://en.wikipedia.org/wiki/List_of_Bellator_events').read().decode('utf-8')
@@ -60,21 +53,21 @@ class Event:
                 days_to_next_event = days_to_future_event
                 date_of_future_event = found_date # this is the date for the next scheduled event taking place after today
         if date_of_future_event != '2050-01-01': # If there are future events in the table after today's
-            logger("Attempmting to update event_dates.txt with future "+i_dic[self.promo]+" event expected to take place on "+date_of_future_event+".")
+            logger.info("Attempmting to update event_dates.txt with future "+i_dic[self.promo]+" event"+buf+"Event expected to take place on "+date_of_future_event+".")
             self.date_updater(date_of_future_event,birth)
             if num_events_today > 0:
-                logger("Attempting the scrape metadata for "+i_dic[self.promo]+"event taking place today.")
+                logger.info("Attempting the scrape metadata for "+i_dic[self.promo]+"event taking place today.")
                 self.fetch(date_of_future_event, scheduled_events_table_html)
             elif birth == 'verified':
-                logger("The "+i_dic[self.promo]+" event that was scheduled to take place today is no longer found in the \"scheduled events\" section on Wikipedia. It may have been cancelled or already moved to \'past events\'.")
+                logger.info("The "+i_dic[self.promo]+" event that was scheduled to take place today is no longer found in the \"scheduled events\" section on Wikipedia."+buf+"It may have been cancelled or already moved to \'past events\'.")
         else:
-            logger("There were no future "+i_dic[self.promo]+" events listed under \"scheduled events\" on Wikpedia."+buf+"Attempting to update event_dates.txt to "+date_of_future_event+" so the program can periodically check for updates to the page.")
+            logger.info("There were no future "+i_dic[self.promo]+" events listed under \"scheduled events\" on Wikpedia."+buf+"Attempting to update event_dates.txt to "+date_of_future_event+buf+"This is done so the program can periodically check for updates to the page.")
             self.date_updater(date_of_future_event,birth)
             if num_dates_in_table > 0:
-                logger("Attempting the scrape metadata for "+i_dic[self.promo]+"event taking place today.")
+                logger.info("Attempting the scrape metadata for "+i_dic[self.promo]+"event taking place today.")
                 self.fetch(date_of_future_event, scheduled_events_table_html)
             elif birth == 'verified':
-                logger("The "+i_dic[self.promo]+" event that was scheduled to take place today is no longer found in the \"scheduled events\" section on Wikipedia. It may have been cancelled or already moved to \'past events\'.")
+                logger.info("The "+i_dic[self.promo]+" event that was scheduled to take place today is no longer found in the \"scheduled events\" section on Wikipedia."+buf+"It may have been cancelled or already moved to \'past events\'.")
 
     def date_updater(self,date_of_future_event,birth):
         if birth == 'setup':
@@ -106,7 +99,7 @@ class Event:
         else: today_events_plus = scheduled_events_table_html
         if self.promo =="ufc": number_of_events_today = len(re.findall("</tr>\n<tr>",today_events_plus))
         else: number_of_events_today = 1
-        logger("According to the wikipedia page, there is "+str(number_of_events_today)+" "+i_dic[self.promo]+" event taking place today."+buf+"Extracting information about event title, date, venue and location.")
+        logger.info("According to the wikipedia page, there is "+str(number_of_events_today)+" "+i_dic[self.promo]+" event taking place today."+buf+"Extracting information about event title, date, venue and location.")
         for g in range(1,number_of_events_today+1):
             if date_of_future_event != '2050-01-01':
                 today_events_html = re.split('</tr>\n<tr>',today_events_plus)
@@ -136,19 +129,19 @@ class Event:
             city = re.split('>',city_plus)[1]
             location = city + ", " + country
 
-            logger("Information about event title, date, venue and location successfully extracted."+buf+"Attempting to create the directory named"+buf+os.path.join(destination+title,''))
+            logger.info("Information about event title, date, venue and location successfully extracted."+buf+"Attempting to create the directory named"+buf+os.path.join(destination+title,''))
 
             try: # creates a directory for the .nfo file to be saved to
                 os.makedirs(os.path.join(destination+title,''))
             except OSError:
                 if not os.path.isdir(os.path.join(destination+title,'')):
                     raise
-            logger("Created the directory named"+buf+os.path.join(destination+title,'')+buf+"Attempting to create .nfo file.")
+            logger.info("Created the directory named"+buf+os.path.join(destination+title,'')+buf+"Attempting to create .nfo file.")
 
             nfo = open(os.path.join(destination+title,'')+title+".nfo",'w')
             nfo.write("<movie>\n<title>Soon - "+title+"</title>\n<genre>Sports</genre>\n<releasedate>"+date+"</releasedate>\n<tagline>"+venue+" - "+location+"</tagline>\n<plot>")
             nfo.close()
-            logger("Info file "+buf+os.path.join(destination+title,'')+title+".nfo"+buf+"was created."+buf+"Attempting to open Wikipedia page containing thefor fight card information for this event.")
+            logger.info("Info file "+buf+os.path.join(destination+title,'')+title+".nfo"+buf+"was created."+buf+"Attempting to open Wikipedia page containing thefor fight card information for this event.")
             page_title = title
             if self.promo == 'inv': searchable_title=title[0:13].lower(); page_title = title
             elif self.promo == 'bel': searchable_title=title.lower(); page_title = title
@@ -166,7 +159,7 @@ class Event:
                 if self.promo == "ufc":
                     is_alt_title = re.findall('known as',page_split_at_correct_event) # determine if there is an alternative title
                     if len(is_alt_title) > 0:
-                        logger("There is an \"also known as\" title on the Wikipedia page. The alternative title will be used for file matching.")
+                        logger.info("There is an \"also known as\" title on the Wikipedia page. The alternative title will be used for file matching.")
                         alternative_title3 = re.compile('.*?known\sas.*?<i><b>').split(page_split_at_correct_event)[1]
                         alternative_title2 = re.compile('<').split(alternative_title3)[0]
                         alternative_title = alternative_title2.lower()
@@ -181,7 +174,7 @@ class Event:
                     if len(is_alt_title) < 1:
                         searchable_title = title[0:7].lower()
 
-                logger("Looking under \"Fight card\" header for fight cards.")
+                logger.info("Looking under \"Fight card\" header for fight cards.")
                 table_of_all_cards_plus = re.compile(">[F|f]ight [C|c]ard<").split(page_split_at_correct_event,1)[1]
                 table_of_all_cards = re.compile("<\/table>").split(table_of_all_cards_plus,1)[0]
                 number_of_cards = len(re.findall("<tr>\n<th.*?\n<\/tr>",table_of_all_cards))
@@ -259,24 +252,24 @@ class Event:
                 nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
                 nfo.write("</plot>\n</movie>")
                 nfo.close()
-                logger("Meta-data file"+buf+os.path.join(destination+title,'')+title+".nfo"+buf+"has finished being written.")
+                logger.info("Meta-data file"+buf+os.path.join(destination+title,'')+title+".nfo"+buf+"has finished being written.")
                 if number_of_cards > 1:
                     feat_dir = os.path.join(os.path.join(os.path.join(destination+title,''),'Featurette'),'')
                     os.makedirs(feat_dir)
-                    logger("Featurette directory"+buf+feat_dir+buf+"was created.")
+                    logger.info("Featurette directory"+buf+feat_dir+buf+"was created.")
                     prelim_holder = open(feat_dir+'Soon - Prelims.avi','w')
                     prelim_holder.write(searchable_title+" prelim")
                     prelim_holder.close()
-                    logger("Preliminary card video placeholder file"+buf+feat_dir+"Soon - Prelims.avi"+buf+"was created.")
+                    logger.info("Preliminary card video placeholder file"+buf+feat_dir+"Soon - Prelims.avi"+buf+"was created.")
                 if number_of_cards > 2:
                     early_holder = open(feat_dir+'Soon - Early Prelims.avi','w')
                     early_holder.write(searchable_title+" early prelim")
                     early_holder.close()
-                    logger("Early preliminary card video placeholder file"+buf+feat_dir+"Soon - Early Prelims.avi"+buf+"was created.")
+                    logger.info("Early preliminary card video placeholder file"+buf+feat_dir+"Soon - Early Prelims.avi"+buf+"was created.")
                 self.poster_fetch(destination, title, searchable_title,page_with_mma_event)
             except (IndexError, ValueError, urllib.error.HTTPError) as e:
-                 logger("ERROR: URL for webpage containing "+title+" was not present on the scheduled events page. Info file can not be completed.")
-                 logger2.exception(e)
+                 logger.info("ERROR: URL for webpage containing "+title+" was not present on the scheduled events page."+buf+"Info file can not be completed.")
+                 logger.exception(e)
                  nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
                  nfo.write("MMA Event</plot>\n</movie>")
                  nfo.close()
@@ -285,7 +278,7 @@ class Event:
             main_holder = open(os.path.join(destination+title,'')+searchable_title+".avi",'w')
             main_holder.write(searchable_title)
             main_holder.close()
-            logger("Main card video placeholder file"+buf+os.path.join(os.path.join(destination+title,''),searchable_title)+".avi"+buf+"was created.")
+            logger.info("Main card video placeholder file"+buf+os.path.join(os.path.join(destination+title,''),searchable_title)+".avi"+buf+"was created.")
             time.sleep(5)
         f = open(info_check.mma_direct+'event_dates.txt','r')
         filedata = f.read()
@@ -321,9 +314,9 @@ class Event:
                     with urllib.request.urlopen('https://upload.wikimedia.org/wikipedia/'+poster_image_url) as response, open(dos.path.join(os.path.join(destination+title,''),searchable_title+'.jpg'), 'wb') as out_file:
                         data = response.read() # a `bytes` object
                         out_file.write(data)
-                    logger("Poster file "+buf+os.path.join(os.path.join(destination+title,''),searchable_title+'.jpg')+buf+"was created.")
+                    logger.info("Poster file "+buf+os.path.join(os.path.join(destination+title,''),searchable_title+'.jpg')+buf+"was created.")
                 except (IndexError, ValueError, urllib.error.HTTPError):
-                    logger("ERROR: URL for webpage containing "+title+" event poster is not where expected. Attempting to use locally stored generic poster.")
+                    logger.info("ERROR: URL for webpage containing "+title+" event poster is not where expected."+buf+"Attempting to use locally stored generic poster.")
                     self.local_poster(destination, title, searchable_title)
             elif self.promo == 'inv':
                 event_num = searchable_title[-2:]
@@ -336,9 +329,9 @@ class Event:
                     with urllib.request.urlopen(poster_image_url) as response, open(os.path.join(os.path.join(destination+title,''),searchable_title+'.jpg'), 'wb') as out_file:
                         data = response.read() # a `bytes` object
                         out_file.write(data)
-                    logger("Poster file "+buf+os.path.join(os.path.join(destination+title,''),searchable_title+'.jpg')+buf+"was created.")
+                    logger.info("Poster file "+buf+os.path.join(os.path.join(destination+title,''),searchable_title+'.jpg')+buf+"was created.")
                 except (IndexError,ValueError, urllib.error.HTTPError):
-                    logger("ERROR: URL for webpage containing "+title+" event poster is not where expected. Attempting to use locally stored generic poster.")
+                    logger.info("ERROR: URL for webpage containing "+title+" event poster is not where expected."+buf+"Attempting to use locally stored generic poster.")
                     self.local_poster(destination, title, searchable_title)
             elif self.promo == 'lfa':
                 l_title = title.lower()
@@ -350,7 +343,7 @@ class Event:
                     try:
                         poster_page = urllib.request.urlopen('http://lfafighting.com/event/'+eval('url_part'+str(x))).read().decode('utf-8')
                     except urllib.error.HTTPError:
-                        logger("http://lfafighting.com/event/"+eval('url_part'+str(x))+" doesn't exist.")
+                        logger.info("http://lfafighting.com/event/"+eval('url_part'+str(x))+" doesn't exist.")
                     else:
                         try:
                             images = re.findall('http.*?fighting.*?LFA-'+event_number+'.*?jpg',poster_page)
@@ -358,14 +351,14 @@ class Event:
                             with urllib.request.urlopen(poster_image_url) as response, open(os.path.join(os.path.join(destination+title,''),searchable_title+'.jpg'), 'wb') as out_file:
                                 data = response.read() # a `bytes` object
                                 out_file.write(data)
-                            logger("Poster file "+buf+os.path.join(os.path.join(destination+title,''),searchable_title+'.jpg')+buf+"was created.")
+                            logger.info("Poster file "+buf+os.path.join(os.path.join(destination+title,''),searchable_title+'.jpg')+buf+"was created.")
                             url_worked = 1
                             break
                         except (IndexError,ValueError, urllib.error.HTTPError):
-                            logger("ERROR: URL for webpage containing "+title+" event poster is not where expected. Attempting to use locally stored generic poster.")
+                            logger.info("ERROR: URL for webpage containing "+title+" event poster is not where expected."+buf+"Attempting to use locally stored generic poster.")
                             self.local_poster(destination, title, searchable_title)
                 if url_worked == 0:
-                    logger("Attempting to use locally stored generic poster.")
+                    logger.info("Attempting to use locally stored generic poster.")
                     self.local_poster(destination, title, searchable_title)
 
 
@@ -375,4 +368,4 @@ class Event:
     def local_poster(self,destination, title, searchable_title):
         poster_dir = os.path.join(os.path.join(info_check.meta,"poster"),'')
         copyfile(poster_dir+self.promo+'.jpg', os.path.join(os.path.join(destination+title,''),searchable_title+'.jpg'))
-        logger("A generic poster file"+buf+os.path.join(os.path.join(destination+title,''),searchable_title+'.jpg')+buf+"was created.")
+        logger.info("A generic poster file"+buf+os.path.join(os.path.join(destination+title,''),searchable_title+'.jpg')+buf+"was created.")
