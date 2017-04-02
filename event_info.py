@@ -147,9 +147,14 @@ class Event:
             elif self.promo == 'bel': searchable_title=title.lower(); page_title = title
             elif self.promo == 'one': searchable_title=title[0:19].lower(); page_title=re.sub(' \d\d','',title)
             elif self.promo == 'glr': searchable_title=title[0:8].lower(); page_title = title
-            elif self.promo == 'ttn': searchable_title=title[0:11].lower(); page_title = title
-            elif self.promo == 'wsof': searchable_title=title[0:7].lower(); page_title = re.sub('WSOF','World Series of Fighting',title)
+            elif self.promo == 'ttn': searchable_title=title[0:11].lower(); page_title = title[0:11]
             elif self.promo == 'lfa': num = re.search(r'\d+', title).group(); searchable_title= 'lfa '+str(num); page_title = title
+            elif self.promo == 'wsof':
+                page_title = re.sub('WSOF','World Series of Fighting',title)
+                if len(re.findall('Global Championship',title))>0:
+                    searchable_title=title[:24].lower()
+                else:
+                    searchable_title=title[:7].lower()
 
             try:
                 mma_event_page_end_of_url = re.split('\"', title_html)[1]
@@ -257,10 +262,16 @@ class Event:
                     feat_dir = os.path.join(os.path.join(os.path.join(destination+title,''),'Featurette'),'')
                     os.makedirs(feat_dir)
                     logger.info("Featurette directory"+buf+feat_dir+buf+"was created.")
-                    prelim_holder = open(feat_dir+'Soon - Prelims.avi','w')
-                    prelim_holder.write(searchable_title+" prelim")
-                    prelim_holder.close()
-                    logger.info("Preliminary card video placeholder file"+buf+feat_dir+"Soon - Prelims.avi"+buf+"was created.")
+                    if self.promo == 'glr':
+                        prelim_holder = open(feat_dir+'Soon - Superfight Series.avi','w')
+                        prelim_holder.write(searchable_title+" superfight")
+                        prelim_holder.close()
+                        logger.info("Preliminary card video placeholder file"+buf+feat_dir+"Soon - Superfight Series.avi"+buf+"was created.")
+                    else:
+                        prelim_holder = open(feat_dir+'Soon - Prelims.avi','w')
+                        prelim_holder.write(searchable_title+" prelim")
+                        prelim_holder.close()
+                        logger.info("Preliminary card video placeholder file"+buf+feat_dir+"Soon - Prelims.avi"+buf+"was created.")
                 if number_of_cards > 2:
                     early_holder = open(feat_dir+'Soon - Early Prelims.avi','w')
                     early_holder.write(searchable_title+" early prelim")
