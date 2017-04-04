@@ -11,7 +11,7 @@ metaMMA is for Plex users who add popular MMA event videos to their server.  It 
 ## Requirements
  * [Git](https://git-scm.com/)
  * [Python 3.0+](https://www.python.org/downloads/)
- * [Plex Media Server](https://www.plex.tv/downloads/) with [.nfo importer](https://forums.plex.tv/discussion/38402/metadata-agents-for-exported-xbmc-library) installed
+ * [Plex Media Server](https://www.plex.tv/downloads/) with [.nfo importer](https://forums.plex.tv/discussion/38402/metadata-agents-for-exported-xbmc-library) installed and/or [KODI](https://kodi.tv/download/) with [Texture Cache](http://forum.kodi.tv/showthread.php?tid=158373) installed
 
 ## Installation
  * [Linux & Pi](https://github.com/metaMMA/metaMMA/wiki/Linux-&-Pi)
