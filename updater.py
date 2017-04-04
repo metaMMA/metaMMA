@@ -96,7 +96,6 @@ if StrictVersion(latest_version_num) > StrictVersion(version):
     move(info_check.meta, os.path.join(os.path.join(info_check.home,".metaMMAold"),"")) # rename the current metaMMA release to 'metalMMAold'
     logger.info("Attempting to rename newly downloaded metaMMA directory to .metaMMA.")
     move(info_check.home+'metaMMA', info_check.meta)
-
     if os.path.isfile(info_check.meta+'user_info.py'):
         old_user_info = open(os.path.join(info_check.home+'.metaMMAold','')+'user_info.py','r')
         old_user_info_block = old_user_info.read()
@@ -105,19 +104,16 @@ if StrictVersion(latest_version_num) > StrictVersion(version):
         updated_user_info = open(info_check.meta+'user_info2.py','a')
         for line in new_generic_user_info:
         	place = line.find('=')
-        	if place > 0:
-        		if len(re.findall(line[:place],old_user_info_block))>0:
-        			word=line[0:place]
-        			updated_user_info.write(re.search(word+r'.*'+'\n',old_user_info_block).group())
-        		else:
-        			updated_user_info.write(line.rstrip()+'\n')
-        	else: updated_user_info.write(line.rstrip()+'\n')
+    		if len(re.findall(line[:place],old_user_info_block))>0:
+    			word=line[0:place]
+    			updated_user_info.write(re.search(word+r'.*'+'\n',old_user_info_block).group())
+    		else:
+    			updated_user_info.write(line.rstrip()+'\n')
         updated_user_info.close()
         logger.info("Attempting to delete generic user_info file from new download.")
         os.remove(info_check.meta+'user_info.py') #remove the new stock user_info.py file
         logger.info("Attempting to rename updated user_info.py.")
         move(info_check.meta+'user_info2.py',info_check.meta+'user_info.py')
-
 vdata = open(info_check.meta+'version.txt','r')
 v = vdata.read()
 version = re.sub('\n','',v[1:])

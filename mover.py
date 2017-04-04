@@ -1,5 +1,22 @@
 #!/usr/bin/env python
-
+################################################################################
+#
+#	Copyright (C) 2017
+#
+#	This program is free software: you can redistribute it and/or modify
+#	it under the terms of the GNU General Public License as published by
+#	the Free Software Foundation, either version 3 of the License, or
+#	(at your option) any later version.
+#
+#	This program is distributed in the hope that it will be useful,
+#	but WITHOUT ANY WARRANTY; without even the implied warranty of
+#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#	GNU General Public License for more details.
+#
+#	You should have received a copy of the GNU General Public License
+#	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+################################################################################
 from datetime import datetime
 import time
 import os
@@ -16,6 +33,7 @@ import urllib.request
 import fileinput
 import sys
 import logging
+import platform
 
 logging.basicConfig(filename=info_check.mma_direct+"log.txt",level=logging.DEBUG,format='[%(asctime)s] %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
 logger = logging.getLogger(__name__)
@@ -42,6 +60,11 @@ def exit_stats():
 
 def plex_refresh():
     urllib.request.urlopen('http://localhost:32400/library/sections/'+plex_token.section+'/refresh?X-Plex-Token='+plex_token.token)
+
+def kodi_refresh():
+    if platform.system() == 'Windows' or platform.system() == 'windows':
+        os.system("py -3 texturecache.py qax movies @qaperiod=-1 @qa.nfo.refresh=1")
+    else: os.system("python3 texturecache.py qax movies @qaperiod=-1 @qa.nfo.refresh=1")
 
 if os.path.isfile(info_check.mma_direct+'mover.running'):
     running = open(info_check.mma_direct+'mover.running','r')
@@ -156,15 +179,16 @@ for x in range(0,len(video_holder_filename)):
                 os.remove(video_holder_path_and_file[x])
                 whole_dir_plus = os.path.join(video_holder_path[x],'')
                 whole_dir = whole_dir_plus[:-11]
-                logger.info("Directory"+buf+whole_dir+buf+"will be moved to "+buf+user_info.tmp_dir+buf+"to remove from pleX.")
+                logger.info("Directory"+buf+whole_dir+buf+"will be moved to "+buf+user_info.tmp_dir+buf+"to aid in refreshing.")
                 move(whole_dir,user_info.tmp_dir)
-                plex_refresh()
+                if user_info.refresh_plex == 1: plex_refresh()
                 time.sleep(30)
-                logger.info("Directories and files will be moved back to"+buf+os.path.abspath(os.path.join(os.path.join(video_holder_path[x], os.pardir),os.pardir))+buf+"in order to force pleX to refresh. The script will stop running now.")
+                logger.info("Directories and files will be moved back to"+buf+os.path.abspath(os.path.join(os.path.join(video_holder_path[x], os.pardir),os.pardir))+buf+"in order to help refresh. The script will stop running now.")
                 for node in os.listdir(user_info.tmp_dir):
                     if not os.path.isdir(node):
                         move(os.path.join(user_info.tmp_dir, node) , os.path.join(os.path.abspath(os.path.join(os.path.join(video_holder_path[x], os.pardir),os.pardir)), node))
-                        plex_refresh()
+                if user_info.refresh_plex == 1: plex_refresh()
+                if user_info.refresh_kodi == 1: kodi_refresh()
                 exit_stats()
             elif ('prelim' in video_name_search_terms) and ('prelim' in holder_search_terms) and ('early' not in video_name_search_terms) and ('early' not in holder_search_terms):
                 logger.info("Video found at"+buf+completed_video_path_and_filename[y]+buf+"will be copied to"+buf+os.path.join(video_holder_path[x],'')+"Prelims"+v_end+buf+"and"+buf+video_holder_path_and_file[x]+buf+"will be deleted.")
@@ -186,15 +210,16 @@ for x in range(0,len(video_holder_filename)):
                 os.remove(video_holder_path_and_file[x])
                 whole_dir_plus = os.path.join(video_holder_path[x],'')
                 whole_dir = whole_dir_plus[:-11]
-                logger.info("Directory"+buf+whole_dir+buf+"will be moved to "+buf+user_info.tmp_dir+buf+"to remove from pleX.")
+                logger.info("Directory"+buf+whole_dir+buf+"will be moved to "+buf+user_info.tmp_dir+buf+"to aid in refreshing.")
                 move(whole_dir,user_info.tmp_dir)
-                plex_refresh()
+                if user_info.refresh_plex == 1: plex_refresh()
                 time.sleep(30)
-                logger.info("Directories and files will be moved back to"+buf+os.path.abspath(os.path.join(os.path.join(video_holder_path[x], os.pardir),os.pardir))+buf+"in order to force pleX to refresh. The script will stop running now.")
+                logger.info("Directories and files will be moved back to"+buf+os.path.abspath(os.path.join(os.path.join(video_holder_path[x], os.pardir),os.pardir))+buf+"in order to help refresh. The script will stop running now.")
                 for node in os.listdir(user_info.tmp_dir):
                     if not os.path.isdir(node):
                         move(os.path.join(user_info.tmp_dir, node) , os.path.join(os.path.abspath(os.path.join(os.path.join(video_holder_path[x], os.pardir),os.pardir)), node))
-                        plex_refresh()
+                if user_info.refresh_plex == 1: plex_refresh()
+                if user_info.refresh_kodi == 1: kodi_refresh()
                 exit_stats()
             elif ('early' not in video_name_search_terms) and ('prelim' not in video_name_search_terms) and ('early' not in holder_search_terms) and ('prelim' not in holder_search_terms):
                 title = os.path.basename(os.path.normpath(video_holder_path[x]))
@@ -231,15 +256,16 @@ for x in range(0,len(video_holder_filename)):
                 move(os.path.join(video_holder_path[x],'')+title+'2.nfo',os.path.join(video_holder_path[x],'')+title+'.nfo')
                 logger.info(video_holder_path_and_file[x]+" will be deleted.")
                 os.remove(video_holder_path_and_file[x])
-                logger.info("Directory"+buf+os.path.join(video_holder_path[x],'')+buf+"will be moved to "+buf+user_info.tmp_dir+buf+"to remove from pleX.")
+                logger.info("Directory"+buf+os.path.join(video_holder_path[x],'')+buf+"will be moved to "+buf+user_info.tmp_dir+buf+"to aid in refreshing.")
                 move(os.path.join(video_holder_path[x],''),user_info.tmp_dir)
-                plex_refresh()
+                if user_info.refresh_plex == 1: plex_refresh()
                 time.sleep(30)
                 logger.info("Directories and files will be moved back to"+buf+os.path.abspath(os.path.join(video_holder_path[x], os.pardir))+buf+"in order to force pleX to refresh. The script will stop running now.")
                 for node in os.listdir(user_info.tmp_dir):
                     if not os.path.isdir(node):
                         move(os.path.join(user_info.tmp_dir, node) , os.path.join(os.path.abspath(os.path.join(video_holder_path[x], os.pardir)), node))
-                        plex_refresh()
+                if user_info.refresh_plex == 1: plex_refresh()
+                if user_info.refresh_kodi == 1: kodi_refresh()
                 exit_stats()
 
 #logger.info("There were holder files in the destination directory, but there were no matching video files in your source directory. The script will stop running now.")
