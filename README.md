@@ -1,5 +1,5 @@
 # metaMMA
-metaMMA is for Plex users who add popular MMA event videos to their server or their KODI library.  It can monitor your completed downloads directory, move the video files, rename the video files, add a .nfo file with pertinent meta-data, and add event posters.
+metaMMA is for users who add popular MMA event videos to their Plex Media Server or their KODI library.  It can monitor your completed downloads directory, move the video files, rename the video files, add a .nfo file with pertinent meta-data, and add event posters.
 
 ## Major Features Include:
  * Support for major platforms: Linux, macOS, Raspberry Pi, Windows
