@@ -30,11 +30,11 @@ elif (user_info.tmp_dir == '/media/QQQ/tmp/'):
 elif (user_info.done_dir == '/media/QQQ/done/'):
     print('Please update the the video source directory.')
     exit()
-elif user_info.refresh_kodi == 1:
+if user_info.refresh_kodi == 1:
     if not os.path.isfile(os.path.join(os.path.expanduser("~"),"")+'texturecache.py'):
         print('Please install \'texturecache.py\' in order to refresh KODI.')
         exit()
-elif user_info.refresh_plex  == 1:
+if user_info.refresh_plex  == 1:
     if (user_info.mma_lib == 'QQQ'):
         print('Please update the name of the pleX library that scans for MMA videos.')
         exit()
@@ -47,8 +47,7 @@ elif user_info.refresh_plex  == 1:
     elif (user_info.plex_ip == '192.168.QQQ.QQQ'):
         print('Please update the ip address of the machine running the pleX media server software.')
         exit()
-else:
-    home = os.path.join(os.path.expanduser("~"),"")
-    mma_direct = os.path.join(os.path.join(home,".MMA"),"")
-    meta = os.path.join(os.path.join(home,".metaMMA"),"")
-    info_updated = 1
+home = os.path.join(os.path.expanduser("~"),"")
+mma_direct = os.path.join(os.path.join(home,".MMA"),"")
+meta = os.path.join(os.path.join(home,".metaMMA"),"")
+info_updated = 1
