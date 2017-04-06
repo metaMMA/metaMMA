@@ -114,6 +114,7 @@ if StrictVersion(latest_version_num) > StrictVersion(version):
         os.remove(info_check.meta+'user_info.py') #remove the new stock user_info.py file
         logger.info("Attempting to rename updated user_info.py.")
         move(info_check.meta+'user_info2.py',info_check.meta+'user_info.py')
+        logger.info("Update complete. Exiting script.")
 vdata = open(info_check.meta+'version.txt','r')
 v = vdata.read()
 version = re.sub('\n','',v[1:])
