@@ -20,7 +20,7 @@ dic = {'Invicta FC':'inv','Bellator':'bel','UFC':'ufc','WSOF':'wsof','Titan FC':
 i_dic = {v: k for k, v in dic.items()}
 today_date_object = datetime.now()
 today_str = today_date_object.strftime('%Y-%m-%d')
-
+ind_wiki = 1
 class Event:
     def __init__(self,promo):
         self.promo = promo
@@ -57,7 +57,7 @@ class Event:
             self.date_updater(date_of_future_event,birth)
             if num_events_today > 0:
                 logger.info("Attempting the scrape metadata for "+i_dic[self.promo]+"event taking place today.")
-                self.fetch(date_of_future_event, scheduled_events_table_html)
+                self.basic_info(date_of_future_event, scheduled_events_table_html)
             elif birth == 'verified':
                 logger.info("The "+i_dic[self.promo]+" event that was scheduled to take place today is no longer found in the \"scheduled events\" section on Wikipedia."+buf+"It may have been cancelled or already moved to \'past events\'.")
         else:
@@ -65,7 +65,7 @@ class Event:
             self.date_updater(date_of_future_event,birth)
             if num_dates_in_table > 0:
                 logger.info("Attempting the scrape metadata for "+i_dic[self.promo]+"event taking place today.")
-                self.fetch(date_of_future_event, scheduled_events_table_html)
+                self.basic_info(date_of_future_event, scheduled_events_table_html)
             elif birth == 'verified':
                 logger.info("The "+i_dic[self.promo]+" event that was scheduled to take place today is no longer found in the \"scheduled events\" section on Wikipedia."+buf+"It may have been cancelled or already moved to \'past events\'.")
 
@@ -83,7 +83,7 @@ class Event:
             f.write(newdata)
             f.close()
 
-    def fetch(self, date_of_future_event, scheduled_events_table_html):
+    def basic_info(self, date_of_future_event, scheduled_events_table_html):
         if user_info.MMA == 1: destination = user_info.mma_destination
         else: destination = eval("user_info."+self.promo+"_destination")
         if self.promo == 'glr' :
@@ -108,8 +108,13 @@ class Event:
                 event_html = today_events_plus
             event_html_row = re.split('</td>', event_html, cols-1) # splits event into 4 - 6 columns ((event number), title, date, venue, location,(attendance))
             title_html = event_html_row[row_num-3]
-            title_html2 = re.split('\">', title_html)[1]
-            title = re.split('</a>', title_html2)[0]
+            try:
+                title_html2 = re.split('\">', title_html)[1]
+                title = re.split('</a>', title_html2)[0]
+            except IndexError as e:
+                logger.info("There is no individual wiki page for this event. Fight card information cannot be found.")
+                title = title_html[5:]
+                ind_wiki = 0
             date_html = event_html_row[row_num-2]
             date_html2 = re.split('>00000000', date_html)[1]
             date = re.split('-0000<',date_html2)[0]
@@ -141,7 +146,6 @@ class Event:
             nfo = open(os.path.join(destination+title,'')+title+".nfo",'w')
             nfo.write("<movie>\n<title>Soon - "+title+"</title>\n<genre>Sports</genre>\n<releasedate>"+date+"</releasedate>\n<tagline>"+venue+" - "+location+"</tagline>\n<plot>")
             nfo.close()
-            logger.info("Info file "+buf+os.path.join(destination+title,'')+title+".nfo"+buf+"was created."+buf+"Attempting to open Wikipedia page containing thefor fight card information for this event.")
             page_title = title
             if self.promo == 'inv': searchable_title=title[0:13].lower(); page_title = title
             elif self.promo == 'bel': searchable_title=title.lower(); page_title = title
@@ -155,136 +159,139 @@ class Event:
                     searchable_title=title[:24].lower()
                 else:
                     searchable_title=title[:7].lower()
+            if ind_wiki == 1:
+                logger.info("Info file "+buf+os.path.join(destination+title,'')+title+".nfo"+buf+"was created."+buf+"Attempting to open Wikipedia page containing thefor fight card information for this event.")
+                try:
+                    mma_event_page_end_of_url = re.split('\"', title_html)[1]
+                    mma_event_page_url = "https://en.wikipedia.org" + mma_event_page_end_of_url # entire url for individual event page or page containing individual event on wikipedia page
+                    page_with_mma_event = urllib.request.urlopen(mma_event_page_url).read().decode('utf-8')
+                    page_split_at_correct_event = re.compile("b>"+page_title).split(page_with_mma_event)[1]
+                    if self.promo == "ufc":
+                        is_alt_title = re.findall('known as',page_split_at_correct_event) # determine if there is an alternative title
+                        if len(is_alt_title) > 0:
+                            logger.info("There is an \"also known as\" title on the Wikipedia page. The alternative title will be used for file matching.")
+                            alternative_title3 = re.compile('.*?known\sas.*?<i><b>').split(page_split_at_correct_event)[1]
+                            alternative_title2 = re.compile('<').split(alternative_title3)[0]
+                            alternative_title = alternative_title2.lower()
+                            approved_words = ['ufc', 'fight', 'night','fox', 'versus', 'fuel', 'fx', 'ultimate', 'fighter', 'finale']
+                            alternative_title_list = alternative_title.split()
+                            fight_number_list = re.findall('[0-9][0-9]+', alternative_title)
+                            if len(fight_number_list) == 1:
+                                fight_number = fight_number_list[0]
+                            searchable_title_words_list  = [word for word in alternative_title_list if word.lower() in approved_words]
+                            searchable_title_words = ' '.join(searchable_title_words_list)
+                            searchable_title = searchable_title_words+" "+''.join(fight_number)
+                        if len(is_alt_title) < 1:
+                            searchable_title = title[0:7].lower()
 
-            try:
-                mma_event_page_end_of_url = re.split('\"', title_html)[1]
-                mma_event_page_url = "https://en.wikipedia.org" + mma_event_page_end_of_url # entire url for individual event page or page containing individual event on wikipedia page
-                page_with_mma_event = urllib.request.urlopen(mma_event_page_url).read().decode('utf-8')
-                page_split_at_correct_event = re.compile("b>"+page_title).split(page_with_mma_event)[1]
-                if self.promo == "ufc":
-                    is_alt_title = re.findall('known as',page_split_at_correct_event) # determine if there is an alternative title
-                    if len(is_alt_title) > 0:
-                        logger.info("There is an \"also known as\" title on the Wikipedia page. The alternative title will be used for file matching.")
-                        alternative_title3 = re.compile('.*?known\sas.*?<i><b>').split(page_split_at_correct_event)[1]
-                        alternative_title2 = re.compile('<').split(alternative_title3)[0]
-                        alternative_title = alternative_title2.lower()
-                        approved_words = ['ufc', 'fight', 'night','fox', 'versus', 'fuel', 'fx', 'ultimate', 'fighter', 'finale']
-                        alternative_title_list = alternative_title.split()
-                        fight_number_list = re.findall('[0-9][0-9]+', alternative_title)
-                        if len(fight_number_list) == 1:
-                            fight_number = fight_number_list[0]
-                        searchable_title_words_list  = [word for word in alternative_title_list if word.lower() in approved_words]
-                        searchable_title_words = ' '.join(searchable_title_words_list)
-                        searchable_title = searchable_title_words+" "+''.join(fight_number)
-                    if len(is_alt_title) < 1:
-                        searchable_title = title[0:7].lower()
-
-                logger.info("Looking under \"Fight card\" header for fight cards.")
-                table_of_all_cards_plus = re.compile(">[F|f]ight [C|c]ard<").split(page_split_at_correct_event,1)[1]
-                table_of_all_cards = re.compile("<\/table>").split(table_of_all_cards_plus,1)[0]
-                number_of_cards = len(re.findall("<tr>\n<th.*?\n<\/tr>",table_of_all_cards))
-                table_of_fights_in_card_plus = re.compile("<tr>\n<th.*?\n<\/tr>").split(table_of_all_cards)
-                card_titles_html = re.compile("<th colspan=\"8\"").split(table_of_all_cards,number_of_cards)
-                for x in range(1,number_of_cards+1):
-                    if len(re.findall("Notes",table_of_fights_in_card_plus[x])) > 0: # if the table has headers above each card (instead of just at the top) strip them out
-                        table_of_fights_in_card = re.compile("(?<=Notes<\/th>\n)<\/tr>\n").split(table_of_fights_in_card_plus[x])[1]
-                    else:
-                        table_of_fights_in_card = table_of_fights_in_card_plus[x]
-                    number_of_fights_on_card = len(re.findall("<\/tr>",table_of_fights_in_card))
-                    each_fight_on_card = re.compile("<\/tr>").split(table_of_fights_in_card,number_of_fights_on_card)
-                    card_title_chunk = re.compile("<\/th>").split(card_titles_html[x])[0]
-                    if len(re.findall("<a",card_title_chunk)) > 0:
-                        card_title_chunk1 = re.compile("<b>").split(card_title_chunk)[1]
-                        if len(re.findall("\(",card_title_chunk1)) > 0:
-                            card_title_chunk_parts = re.compile("\(").split(card_title_chunk1)[0]
-                            card_title_part1 = card_title_chunk_parts[:-1]
-                            card_title_part2_chunk = re.compile("\(").split(card_title_chunk1)[1]
-                            card_title_part2_chunk2 = re.compile(">").split(card_title_part2_chunk)[1]
-                            card_title_part2 = card_title_part2_chunk2[:-3]
-                            card_title = card_title_part1 + " " + card_title_part2
+                    logger.info("Looking under \"Fight card\" header for fight cards.")
+                    table_of_all_cards_plus = re.compile(">[F|f]ight [C|c]ard<").split(page_split_at_correct_event,1)[1]
+                    table_of_all_cards = re.compile("<\/table>").split(table_of_all_cards_plus,1)[0]
+                    number_of_cards = len(re.findall("<tr>\n<th.*?\n<\/tr>",table_of_all_cards))
+                    table_of_fights_in_card_plus = re.compile("<tr>\n<th.*?\n<\/tr>").split(table_of_all_cards)
+                    card_titles_html = re.compile("<th colspan=\"8\"").split(table_of_all_cards,number_of_cards)
+                    for x in range(1,number_of_cards+1):
+                        if len(re.findall("Notes",table_of_fights_in_card_plus[x])) > 0: # if the table has headers above each card (instead of just at the top) strip them out
+                            table_of_fights_in_card = re.compile("(?<=Notes<\/th>\n)<\/tr>\n").split(table_of_fights_in_card_plus[x])[1]
                         else:
-                            card_title_chunk2 = re.compile("title").split(card_title_chunk1)[1]
-                            card_title_chunk3 = re.compile(">").split(card_title_chunk2)[1]
-                            card_title =card_title_chunk3[:-3]
-                    else:
-                        card_title_chunk1 = re.compile("<b>").split(card_title_chunk)[1]
-                        card_title = card_title_chunk1[:-4]
+                            table_of_fights_in_card = table_of_fights_in_card_plus[x]
+                        number_of_fights_on_card = len(re.findall("<\/tr>",table_of_fights_in_card))
+                        each_fight_on_card = re.compile("<\/tr>").split(table_of_fights_in_card,number_of_fights_on_card)
+                        card_title_chunk = re.compile("<\/th>").split(card_titles_html[x])[0]
+                        if len(re.findall("<a",card_title_chunk)) > 0:
+                            card_title_chunk1 = re.compile("<b>").split(card_title_chunk)[1]
+                            if len(re.findall("\(",card_title_chunk1)) > 0:
+                                card_title_chunk_parts = re.compile("\(").split(card_title_chunk1)[0]
+                                card_title_part1 = card_title_chunk_parts[:-1]
+                                card_title_part2_chunk = re.compile("\(").split(card_title_chunk1)[1]
+                                card_title_part2_chunk2 = re.compile(">").split(card_title_part2_chunk)[1]
+                                card_title_part2 = card_title_part2_chunk2[:-3]
+                                card_title = card_title_part1 + " " + card_title_part2
+                            else:
+                                card_title_chunk2 = re.compile("title").split(card_title_chunk1)[1]
+                                card_title_chunk3 = re.compile(">").split(card_title_chunk2)[1]
+                                card_title =card_title_chunk3[:-3]
+                        else:
+                            card_title_chunk1 = re.compile("<b>").split(card_title_chunk)[1]
+                            card_title = card_title_chunk1[:-4]
+                        nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
+                        nfo.write(card_title+"\n")
+                        for y in range(0,number_of_fights_on_card):
+                            number_of_col = len(re.findall("<\/td>",each_fight_on_card[y]))
+                            info_chunk = re.compile("<\/td>").split(each_fight_on_card[y],number_of_col)
+                            weight_class_html = info_chunk[0]
+                            rand = random.random.randint(0,2)
+                            if rand > 1:
+                                mystery = 1
+                            else:
+                                mystery = -1
+                            fighter1_html = info_chunk[2+mystery]
+                            fighter2_html = info_chunk[2-mystery]
+                            if len(re.findall("<\/a>",weight_class_html)) > 0:
+                                weight_class_chunk = re.compile("title=").split(weight_class_html)[1]
+                                weight_class_chunk2 = re.compile(">").split(weight_class_chunk)[1]
+                                weight_class = weight_class_chunk2[:-3]
+                                nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
+                                nfo.write(weight_class+" ")
+                            else:
+                                weight_class_chunk = re.compile("<td").split(weight_class_html)[1]
+                                weight_class = re.compile(">").split(weight_class_chunk)[1]
+                                nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
+                                nfo.write(weight_class+" ")
+                            if len(re.findall("<\/a>",fighter1_html)) > 0:
+                                fighter1_chunk = re.compile("title=").split(fighter1_html)[1]
+                                fighter1_chunk2 = re.compile(">").split(fighter1_chunk)[1]
+                                fighter1 = fighter1_chunk2[:-3]
+                                nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
+                                nfo.write(fighter1+" vs. ")
+                            else:
+                                fighter1 = re.compile(">").split(fighter1_html)[1]
+                                nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
+                                nfo.write(fighter1+" vs. ")
+                            if len(re.findall("<\/a>",fighter2_html)) > 0:
+                                fighter2_chunk = re.compile("title=").split(fighter2_html)[1]
+                                fighter2_chunk2 = re.compile(">").split(fighter2_chunk)[1]
+                                fighter2 = fighter2_chunk2[:-3]
+                                nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
+                                nfo.write(fighter2+"\n")
+                            else:
+                                fighter2 = re.compile(">").split(fighter2_html)[1]
+                                nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
+                                nfo.write(fighter2+"\n")
+                            time.sleep(0.3)
                     nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
-                    nfo.write(card_title+"\n")
-                    for y in range(0,number_of_fights_on_card):
-                        number_of_col = len(re.findall("<\/td>",each_fight_on_card[y]))
-                        info_chunk = re.compile("<\/td>").split(each_fight_on_card[y],number_of_col)
-                        weight_class_html = info_chunk[0]
-                        rand = random.random.randint(0,2)
-                        if rand > 1:
-                            mystery = 1
+                    nfo.write("</plot>\n</movie>")
+                    nfo.close()
+                    logger.info("Meta-data file"+buf+os.path.join(destination+title,'')+title+".nfo"+buf+"has finished being written.")
+                    if number_of_cards > 1:
+                        feat_dir = os.path.join(os.path.join(os.path.join(destination+title,''),'Featurette'),'')
+                        os.makedirs(feat_dir)
+                        logger.info("Featurette directory"+buf+feat_dir+buf+"was created.")
+                        if self.promo == 'glr':
+                            prelim_holder = open(feat_dir+'Soon - Superfight Series.avi','w')
+                            prelim_holder.write(searchable_title+" superfight")
+                            prelim_holder.close()
+                            logger.info("Preliminary card video placeholder file"+buf+feat_dir+"Soon - Superfight Series.avi"+buf+"was created.")
                         else:
-                            mystery = -1
-                        fighter1_html = info_chunk[2+mystery]
-                        fighter2_html = info_chunk[2-mystery]
-                        if len(re.findall("<\/a>",weight_class_html)) > 0:
-                            weight_class_chunk = re.compile("title=").split(weight_class_html)[1]
-                            weight_class_chunk2 = re.compile(">").split(weight_class_chunk)[1]
-                            weight_class = weight_class_chunk2[:-3]
-                            nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
-                            nfo.write(weight_class+" ")
-                        else:
-                            weight_class_chunk = re.compile("<td").split(weight_class_html)[1]
-                            weight_class = re.compile(">").split(weight_class_chunk)[1]
-                            nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
-                            nfo.write(weight_class+" ")
-                        if len(re.findall("<\/a>",fighter1_html)) > 0:
-                            fighter1_chunk = re.compile("title=").split(fighter1_html)[1]
-                            fighter1_chunk2 = re.compile(">").split(fighter1_chunk)[1]
-                            fighter1 = fighter1_chunk2[:-3]
-                            nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
-                            nfo.write(fighter1+" vs. ")
-                        else:
-                            fighter1 = re.compile(">").split(fighter1_html)[1]
-                            nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
-                            nfo.write(fighter1+" vs. ")
-                        if len(re.findall("<\/a>",fighter2_html)) > 0:
-                            fighter2_chunk = re.compile("title=").split(fighter2_html)[1]
-                            fighter2_chunk2 = re.compile(">").split(fighter2_chunk)[1]
-                            fighter2 = fighter2_chunk2[:-3]
-                            nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
-                            nfo.write(fighter2+"\n")
-                        else:
-                            fighter2 = re.compile(">").split(fighter2_html)[1]
-                            nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
-                            nfo.write(fighter2+"\n")
-                        time.sleep(0.3)
+                            prelim_holder = open(feat_dir+'Soon - Prelims.avi','w')
+                            prelim_holder.write(searchable_title+" prelim")
+                            prelim_holder.close()
+                            logger.info("Preliminary card video placeholder file"+buf+feat_dir+"Soon - Prelims.avi"+buf+"was created.")
+                    if number_of_cards > 2:
+                        early_holder = open(feat_dir+'Soon - Early Prelims.avi','w')
+                        early_holder.write(searchable_title+" early prelim")
+                        early_holder.close()
+                        logger.info("Early preliminary card video placeholder file"+buf+feat_dir+"Soon - Early Prelims.avi"+buf+"was created.")
+                    self.poster_fetch(destination, title, searchable_title,page_with_mma_event)
+                except (IndexError, ValueError, urllib.error.HTTPError) as e:
+                    logger.info("ERROR: Someting unexpected happened while scraping metdata from wikipedia page for "+title+"."+buf+"Info file can not be completed.")
+                    logger.exception(e)
+            if ind_wiki == 0:
+                logger.info("Info file "+buf+os.path.join(destination+title,'')+title+".nfo"+buf+"was created."+buf+"There is no available fight card data.")
                 nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
-                nfo.write("</plot>\n</movie>")
+                nfo.write("MMA Event</plot>\n</movie>")
                 nfo.close()
-                logger.info("Meta-data file"+buf+os.path.join(destination+title,'')+title+".nfo"+buf+"has finished being written.")
-                if number_of_cards > 1:
-                    feat_dir = os.path.join(os.path.join(os.path.join(destination+title,''),'Featurette'),'')
-                    os.makedirs(feat_dir)
-                    logger.info("Featurette directory"+buf+feat_dir+buf+"was created.")
-                    if self.promo == 'glr':
-                        prelim_holder = open(feat_dir+'Soon - Superfight Series.avi','w')
-                        prelim_holder.write(searchable_title+" superfight")
-                        prelim_holder.close()
-                        logger.info("Preliminary card video placeholder file"+buf+feat_dir+"Soon - Superfight Series.avi"+buf+"was created.")
-                    else:
-                        prelim_holder = open(feat_dir+'Soon - Prelims.avi','w')
-                        prelim_holder.write(searchable_title+" prelim")
-                        prelim_holder.close()
-                        logger.info("Preliminary card video placeholder file"+buf+feat_dir+"Soon - Prelims.avi"+buf+"was created.")
-                if number_of_cards > 2:
-                    early_holder = open(feat_dir+'Soon - Early Prelims.avi','w')
-                    early_holder.write(searchable_title+" early prelim")
-                    early_holder.close()
-                    logger.info("Early preliminary card video placeholder file"+buf+feat_dir+"Soon - Early Prelims.avi"+buf+"was created.")
-                self.poster_fetch(destination, title, searchable_title,page_with_mma_event)
-            except (IndexError, ValueError, urllib.error.HTTPError) as e:
-                 logger.info("ERROR: URL for webpage containing "+title+" was not present on the scheduled events page."+buf+"Info file can not be completed.")
-                 logger.exception(e)
-                 nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
-                 nfo.write("MMA Event</plot>\n</movie>")
-                 nfo.close()
-                 self.poster_fetch(destination, title,searchable_title,'error')
+                self.poster_fetch(destination, title,searchable_title,'error')
 
             main_holder = open(os.path.join(destination+title,'')+searchable_title+".avi",'w')
             main_holder.write(searchable_title)
