@@ -298,7 +298,8 @@ class Event:
                 nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
                 nfo.write("MMA Event</plot>\n</movie>")
                 nfo.close()
-                self.poster_fetch(destination, title,searchable_title,'error')
+                if self.promo != 'lfa': self.poster_fetch(destination, title,searchable_title,'error')
+                else: self.poster_fetch(destination,title,searchable_title,'lfa')
 
             main_holder = open(os.path.join(destination+title,'')+searchable_title+".avi",'w')
             main_holder.write(searchable_title)
@@ -363,29 +364,32 @@ class Event:
                 event_number = re.findall('[0-9]+',searchable_title)[0]
                 url_part1 = re.sub(' ','-',re.sub('\.','',re.sub(':','',l_title)))
                 url_part2 = re.sub('legacy-fighting-alliance','lfa',url_part1)
-                url_worked = 0
-                for x in range(1,3): #Try to open the two possible pages containing the event poster
+                try:
+                    poster_page = urllib.request.urlopen('http://lfafighting.com/event/'+url_part1).read().decode('utf-8')
+                except urllib.error.HTTPError:
+                    lfa_fail = 1
+                    logger.info("http://lfafighting.com/event/"+url_part1+" doesn't exist. Trying second url")
+                else:
+                    lfa_fail = 0
+                if lfa_fail == 1:
                     try:
-                        poster_page = urllib.request.urlopen('http://lfafighting.com/event/'+eval('url_part'+str(x))).read().decode('utf-8')
+                        poster_page = urllib.request.urlopen('http://lfafighting.com/event/'+url_part2).read().decode('utf-8')
                     except urllib.error.HTTPError:
-                        logger.info("http://lfafighting.com/event/"+eval('url_part'+str(x))+" doesn't exist.")
-                    else:
-                        try:
-                            images = re.findall('http.*?fighting.*?LFA-'+event_number+'.*?jpg',poster_page)
-                            poster_image_url = images[len(images)-1]
-                            with urllib.request.urlopen(poster_image_url) as response, open(os.path.join(os.path.join(destination+title,''),searchable_title+'.jpg'), 'wb') as out_file:
-                                data = response.read() # a `bytes` object
-                                out_file.write(data)
-                            logger.info("Poster file "+buf+os.path.join(os.path.join(destination+title,''),searchable_title+'.jpg')+buf+"was created.")
-                            url_worked = 1
-                            break
-                        except (IndexError,ValueError, urllib.error.HTTPError):
-                            logger.info("ERROR: URL for webpage containing "+title+" event poster is not where expected."+buf+"Attempting to use locally stored generic poster.")
-                            self.local_poster(destination, title, searchable_title)
-                if url_worked == 0:
-                    logger.info("Attempting to use locally stored generic poster.")
-                    self.local_poster(destination, title, searchable_title)
-
+                        lfa_fail = 2
+                        logger.info("http://lfafighting.com/event/"+url_part2+" doesn't exist.")
+                        logger.info("Attempting to use locally stored generic poster.")
+                        self.local_poster(destination, title, searchable_title)
+                if lfa_fail < 2:
+                    try:
+                        images = re.findall('http.*?fighting.*?LFA-'+event_number+'.*?jpg',poster_page)
+                        poster_image_url = images[len(images)-1]
+                        with urllib.request.urlopen(poster_image_url) as response, open(os.path.join(os.path.join(destination+title,''),searchable_title+'.jpg'), 'wb') as out_file:
+                            data = response.read() # a `bytes` object
+                            out_file.write(data)
+                        logger.info("Poster file was created.")
+                    except (IndexError,ValueError, urllib.error.HTTPError):
+                        logger.info("ERROR: Poster image could not be found on the webpage for "+title+". Attempting to use locally stored generic poster.")
+                        self.local_poster(destination, title, searchable_title)
 
             else: self.local_poster(destination, title, searchable_title)
         else: self.local_poster(destination, title, searchable_title)
