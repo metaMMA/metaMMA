@@ -34,4 +34,4 @@ Expanded 'Plot' Showing All Fight Cards
  * [GNU GPL v3](http://www.gnu.org/licenses/gpl.html)
  * Copyright 2017
 
-v0.3.8 - latest stable version
+v0.3.9 - latest stable version

@@ -60,9 +60,9 @@ for try_count in range(0,2):
         log = open(info_check.mma_direct+'execution-log.txt','a')
         if running_script_name == 'mover.py':
             if try_count == 1:
-                log.write("\n["+time.strftime("%Y-%m-%d %H:%M:%S")+"] An attempt to run updater.py was made. However, mover.py is currently running. Waiting 4 minutes and trying again.")
+                log.write("\n["+time.strftime("%Y-%m-%d %H:%M:%S")+"] An attempt to run updater.py was made. However, mover.py is currently running. Waiting 3 minutes and trying again.")
                 log.close()
-                time.sleep(240)
+                time.sleep(200)
             if try_count == 2:
                 log.write("\n["+time.strftime("%Y-%m-%d %H:%M:%S")+"] A second attempt to run updater.py was made. However, mover.py is still currently running. Trying again tomorrow.")
                 log.close()
@@ -103,12 +103,12 @@ if StrictVersion(latest_version_num) > StrictVersion(version):
         new_generic_user_info = open(info_check.meta+'user_info.py').readlines()
         updated_user_info = open(info_check.meta+'user_info2.py','a')
         for line in new_generic_user_info:
-        	place = line.find('=')
-    		if len(re.findall(line[:place],old_user_info_block))>0:
-    			word=line[0:place]
-    			updated_user_info.write(re.search(word+r'.*'+'\n',old_user_info_block).group())
-    		else:
-    			updated_user_info.write(line.rstrip()+'\n')
+            place = line.find('=')
+            if len(re.findall(line[:place],old_user_info_block)) > 0:
+                word=line[0:place]
+                updated_user_info.write(re.search(word+r'.*'+'\n',old_user_info_block).group())
+            else:
+                updated_user_info.write(line.rstrip()+'\n')
         updated_user_info.close()
         logger.info("Attempting to delete generic user_info file from new download.")
         os.remove(info_check.meta+'user_info.py') #remove the new stock user_info.py file
