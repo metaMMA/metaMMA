@@ -20,7 +20,6 @@ dic = {'Invicta FC':'inv','Bellator':'bel','UFC':'ufc','WSOF':'wsof','Titan FC':
 i_dic = {v: k for k, v in dic.items()}
 today_date_object = datetime.now()
 today_str = today_date_object.strftime('%Y-%m-%d')
-ind_wiki = 1
 class Event:
     def __init__(self,promo):
         self.promo = promo
@@ -108,6 +107,7 @@ class Event:
                 event_html = today_events_plus
             event_html_row = re.split('</td>', event_html, cols-1) # splits event into 4 - 6 columns ((event number), title, date, venue, location,(attendance))
             title_html = event_html_row[row_num-3]
+            ind_wiki = 1
             try:
                 title_html2 = re.split('\">', title_html)[1]
                 title = re.split('</a>', title_html2)[0]
@@ -183,7 +183,7 @@ class Event:
                             searchable_title = searchable_title_words+" "+''.join(fight_number)
                         if len(is_alt_title) < 1:
                             searchable_title = title[0:7].lower()
-
+                    kbox = 0
                     logger.info("Looking under \"Fight card\" header for fight cards.")
                     table_of_all_cards_plus = re.compile(">[F|f]ight [C|c]ard<").split(page_split_at_correct_event,1)[1]
                     table_of_all_cards = re.compile("<\/table>").split(table_of_all_cards_plus,1)[0]
@@ -214,13 +214,15 @@ class Event:
                         else:
                             card_title_chunk1 = re.compile("<b>").split(card_title_chunk)[1]
                             card_title = card_title_chunk1[:-4]
+                            if self.promo == 'bel' and len(re.findall('ickboxing',card_title)) > 0: kbox = 1
+
                         nfo = open(os.path.join(destination+title,'')+title+".nfo",'a')
                         nfo.write(card_title+"\n")
                         for y in range(0,number_of_fights_on_card):
                             number_of_col = len(re.findall("<\/td>",each_fight_on_card[y]))
                             info_chunk = re.compile("<\/td>").split(each_fight_on_card[y],number_of_col)
                             weight_class_html = info_chunk[0]
-                            rand = random.random.randint(0,2)
+                            rand = random.randint(0,2)
                             if rand > 1:
                                 mystery = 1
                             else:
@@ -272,6 +274,11 @@ class Event:
                             prelim_holder.write(searchable_title+" superfight")
                             prelim_holder.close()
                             logger.info("Preliminary card video placeholder file"+buf+feat_dir+"Soon - Superfight Series.avi"+buf+"was created.")
+                        elif self.promo == 'bel' and kbox == 1:
+                            prelim_holder = open(feat_dir+'Soon - Bellator Kickboxing.avi','w')
+                            prelim_holder.write(searchable_title+" kickboxing")
+                            prelim_holder.close()
+                            logger.info("Preliminary card video placeholder file"+buf+feat_dir+"Soon - Bellator Kickboxing.avi"+buf+"was created.")
                         else:
                             prelim_holder = open(feat_dir+'Soon - Prelims.avi','w')
                             prelim_holder.write(searchable_title+" prelim")
@@ -329,7 +336,7 @@ class Event:
                     poster_page = urllib.request.urlopen('https://en.wikipedia.org/wiki/File:'+poster_url_end).read().decode('utf-8')
                     poster_image_url_plus = re.split('//upload.wikimedia.org/wikipedia/',poster_page)[1]
                     poster_image_url = re.split('\"',poster_image_url_plus)[0]
-                    with urllib.request.urlopen('https://upload.wikimedia.org/wikipedia/'+poster_image_url) as response, open(dos.path.join(os.path.join(destination+title,''),searchable_title+'.jpg'), 'wb') as out_file:
+                    with urllib.request.urlopen('https://upload.wikimedia.org/wikipedia/'+poster_image_url) as response, open(os.path.join(os.path.join(destination+title,''),searchable_title+'.jpg'), 'wb') as out_file:
                         data = response.read() # a `bytes` object
                         out_file.write(data)
                     logger.info("Poster file "+buf+os.path.join(os.path.join(destination+title,''),searchable_title+'.jpg')+buf+"was created.")
