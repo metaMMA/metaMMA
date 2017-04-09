@@ -73,7 +73,7 @@ if os.path.isfile(info_check.mma_direct+'mover.running'):
     log = open(info_check.mma_direct+'execution-log.txt','a')
     log.write("\n["+time.strftime("%Y-%m-%d %H:%M:%S")+"] An attempt to run mover.py was made. However, "+running_script[22:]+" is currently running. The script will stop running now.")
     log.close()
-    exit_stats()
+    exit()
 else:
     with open(info_check.mma_direct+'mover.running', "w") as running:
         running.write("["+time.strftime("%Y-%m-%d %H:%M:%S")+"] mover.py")
