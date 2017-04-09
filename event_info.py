@@ -144,7 +144,7 @@ class Event:
             logger.info("Created the directory named"+buf+os.path.join(destination+title,'')+buf+"Attempting to create .nfo file.")
 
             nfo = open(os.path.join(destination+title,'')+title+".nfo",'w')
-            nfo.write("<movie>\n<title>Soon - "+title+"</title>\n<genre>Sports</genre>\n<releasedate>"+date+"</releasedate>\n<tagline>"+venue+" - "+location+"</tagline>\n<plot>")
+            nfo.write("<movie>\n<title>Soon - "+title+"</title>\n<genre>Sports</genre>\n<releasedate>"+date+"</releasedate>\n<studio>"+venue+" - "+location+"</studio>\n<plot>")
             nfo.close()
             page_title = title
             if self.promo == 'inv': searchable_title=title[0:13].lower(); page_title = title
