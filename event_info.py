@@ -55,7 +55,7 @@ class Event:
             logger.info("Attempmting to update event_dates.txt with future "+i_dic[self.promo]+" event"+buf+"Event expected to take place on "+date_of_future_event+".")
             self.date_updater(date_of_future_event,birth)
             if num_events_today > 0:
-                logger.info("Attempting the scrape metadata for "+i_dic[self.promo]+"event taking place today.")
+                logger.info("Attempting to scrape metadata for "+i_dic[self.promo]+" event taking place today.")
                 self.basic_info(date_of_future_event, scheduled_events_table_html)
             elif birth == 'verified':
                 logger.info("The "+i_dic[self.promo]+" event that was scheduled to take place today is no longer found in the \"scheduled events\" section on Wikipedia."+buf+"It may have been cancelled or already moved to \'past events\'.")
@@ -63,7 +63,7 @@ class Event:
             logger.info("There were no future "+i_dic[self.promo]+" events listed under \"scheduled events\" on Wikpedia."+buf+"Attempting to update event_dates.txt to "+date_of_future_event+buf+"This is done so the program can periodically check for updates to the page.")
             self.date_updater(date_of_future_event,birth)
             if num_dates_in_table > 0:
-                logger.info("Attempting the scrape metadata for "+i_dic[self.promo]+"event taking place today.")
+                logger.info("Attempting to scrape metadata for "+i_dic[self.promo]+" event taking place today.")
                 self.basic_info(date_of_future_event, scheduled_events_table_html)
             elif birth == 'verified':
                 logger.info("The "+i_dic[self.promo]+" event that was scheduled to take place today is no longer found in the \"scheduled events\" section on Wikipedia."+buf+"It may have been cancelled or already moved to \'past events\'.")
