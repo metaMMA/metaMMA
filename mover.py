@@ -66,6 +66,22 @@ def kodi_refresh():
         os.system("py -3 texturecache.py qax movies @qaperiod=-1 @qa.nfo.refresh=1")
     else: os.system("python3 texturecache.py qax movies @qaperiod=-1 @qa.nfo.refresh=1")
 
+def stat_updater(stat_name):
+    for line in fileinput.input(info_check.mma_direct+'stats.txt'):
+        temp = sys.stdout
+        sys.stdout = open(info_check.mma_direct+'stats2.txt', 'a')
+        if (i_dic[stat_name] in line and 'moved' in line) or ('total'in line and 'moved' in line):
+            tmp = re.findall('[0-9]+',line)
+            num = str(int(str(tmp[0]))+1)
+            new = re.sub(r'[0-9]+',num, line)
+            print(new,end='')
+        else:
+            print(line,end='')
+        sys.stdout.close()
+        sys.stdout = temp
+    os.remove(info_check.mma_direct+'stats.txt')
+    os.rename(info_check.mma_direct+'stats2.txt',info_check.mma_direct+'stats.txt')
+
 if os.path.isfile(info_check.mma_direct+'mover.running'):
     running = open(info_check.mma_direct+'mover.running','r')
     running_script = running.read()
@@ -126,7 +142,7 @@ if len(video_holder_path) < 1:
 #    logger.info("There were no holder files in the destination directory, therefore no files to look for. The script will stop running now.")
     exit_stats()
 
-badwords = ['weigh-i[a-z]+','dana','post.fight','720p','webrip','breakdown','the.fly','inside','road','history','vlog','now','countdown','h264','press.conference','greatest.fighters']
+badwords = ['weigh-i[a-z]+','dana','post.fight','720p','webrip','breakdown','the.fly','inside','road','history','vlog','now','countdown','h264','x264','press.conference','greatest.fighters']
 big_regex = re.compile('|'.join(badwords))
 
 for x in range(0,len(video_holder_filename)):
@@ -148,6 +164,7 @@ for x in range(0,len(video_holder_filename)):
         fix2 = re.sub(r'\.+',' ',fix) # replaced all dots left after removing prohibited words
         fix3 = fix2.lstrip() # strips a leading whitespace, if the filename started with a prohibited word
         video_name_search_terms = fix3.rsplit(" ")
+        video_name_search_terms = ['lfa' if x=='legacy' else x for x in video_name_search_terms]
         if set(video_name_search_terms).issuperset(holder_search_terms):
             if 'mkv' in video_name_search_terms: v_end = '.mkv'
             else: v_end ='.mp4'
@@ -159,114 +176,60 @@ for x in range(0,len(video_holder_filename)):
             elif set(holder_search_terms).issuperset(['wsof']): stat_name = 'wsof'
             elif set(holder_search_terms).issuperset(['lfa']): stat_name = 'lfa'
             else: stat_name = 'ufc'
+            dest_direct = os.path.join(video_holder_path[x],'')
+            event_direct = dest_direct[:-11]
+            title = 'not-main'
+            matched = 0
             if ('early' in video_name_search_terms) and ('early' in holder_search_terms):
-                logger.info("Video found at"+buf+completed_video_path_and_filename[y]+buf+"will be copied to"+buf+os.path.join(video_holder_path[x],'')+"Early Prelims"+v_end+buf+"and"+buf+video_holder_path_and_file[x]+buf+"will be deleted.")
-                copyfile(completed_video_path_and_filename[y], os.path.join(video_holder_path[x],'')+'Early Prelims'+v_end)
-                for line in fileinput.input(info_check.mma_direct+'stats.txt'):
-                    temp = sys.stdout
-                    sys.stdout = open(info_check.mma_direct+'stats2.txt', 'a')
-                    if (i_dic[stat_name] in line and 'moved' in line) or ('total'in line and 'moved' in line):
-                        tmp = re.findall('[0-9]+',line)
-                        num = str(int(str(tmp[0]))+1)
-                        new = re.sub(r'[0-9]+',num, line)
-                        print(new,end='')
-                    else:
-                        print(line,end='')
-                    sys.stdout.close()
-                    sys.stdout = temp
-                os.remove(info_check.mma_direct+'stats.txt')
-                os.rename(info_check.mma_direct+'stats2.txt',info_check.mma_direct+'stats.txt')
-                os.remove(video_holder_path_and_file[x])
-                whole_dir_plus = os.path.join(video_holder_path[x],'')
-                whole_dir = whole_dir_plus[:-11]
-                logger.info("Directory"+buf+whole_dir+buf+"will be moved to "+buf+user_info.tmp_dir+buf+"to aid in refreshing.")
-                move(whole_dir,user_info.tmp_dir)
-                if user_info.refresh_plex == 1: plex_refresh()
-                time.sleep(30)
-                logger.info("Directories and files will be moved back to"+buf+os.path.abspath(os.path.join(os.path.join(video_holder_path[x], os.pardir),os.pardir))+buf+"in order to help refresh. The script will stop running now.")
-                for node in os.listdir(user_info.tmp_dir):
-                    if not os.path.isdir(node):
-                        move(os.path.join(user_info.tmp_dir, node) , os.path.join(os.path.abspath(os.path.join(os.path.join(video_holder_path[x], os.pardir),os.pardir)), node))
-                if user_info.refresh_plex == 1: plex_refresh()
-                if user_info.refresh_kodi == 1: kodi_refresh()
-                exit_stats()
+                v_end = 'Early Prelims'+v_end
+                matched = 1
             elif ('prelim' in video_name_search_terms) and ('prelim' in holder_search_terms) and ('early' not in video_name_search_terms) and ('early' not in holder_search_terms):
-                logger.info("Video found at"+buf+completed_video_path_and_filename[y]+buf+"will be copied to"+buf+os.path.join(video_holder_path[x],'')+"Prelims"+v_end+buf+"and"+buf+video_holder_path_and_file[x]+buf+"will be deleted.")
-                copyfile(completed_video_path_and_filename[y], os.path.join(video_holder_path[x],'')+'Prelims'+v_end)
-                for line in fileinput.input(info_check.mma_direct+'stats.txt'):
-                    temp = sys.stdout
-                    sys.stdout = open(info_check.mma_direct+'stats2.txt', 'a')
-                    if (i_dic[stat_name] in line and 'moved' in line) or ('total'in line and 'moved' in line):
-                        tmp = re.findall('[0-9]+',line)
-                        num = str(int(str(tmp[0]))+1)
-                        new = re.sub(r'[0-9]+',num, line)
-                        print(new,end='')
-                    else:
-                        print(line,end='')
-                    sys.stdout.close()
-                    sys.stdout = temp
-                os.remove(info_check.mma_direct+'stats.txt')
-                os.rename(info_check.mma_direct+'stats2.txt',info_check.mma_direct+'stats.txt')
-                os.remove(video_holder_path_and_file[x])
-                whole_dir_plus = os.path.join(video_holder_path[x],'')
-                whole_dir = whole_dir_plus[:-11]
-                logger.info("Directory"+buf+whole_dir+buf+"will be moved to "+buf+user_info.tmp_dir+buf+"to aid in refreshing.")
-                move(whole_dir,user_info.tmp_dir)
-                if user_info.refresh_plex == 1: plex_refresh()
-                time.sleep(30)
-                logger.info("Directories and files will be moved back to"+buf+os.path.abspath(os.path.join(os.path.join(video_holder_path[x], os.pardir),os.pardir))+buf+"in order to help refresh. The script will stop running now.")
-                for node in os.listdir(user_info.tmp_dir):
-                    if not os.path.isdir(node):
-                        move(os.path.join(user_info.tmp_dir, node) , os.path.join(os.path.abspath(os.path.join(os.path.join(video_holder_path[x], os.pardir),os.pardir)), node))
-                if user_info.refresh_plex == 1: plex_refresh()
-                if user_info.refresh_kodi == 1: kodi_refresh()
-                exit_stats()
+                v_end = 'Prelims'+v_end
+                matched = 1
+            elif ('bellator' in video_name_search_terms) and ('bellator' in holder_search_terms) and ('kickboxing' in video_name_search_terms) and ('kickboxing' in holder_search_terms):
+                v_end = 'Bellator Kickboxing'+v_end
+                matched = 1
             elif ('early' not in video_name_search_terms) and ('prelim' not in video_name_search_terms) and ('early' not in holder_search_terms) and ('prelim' not in holder_search_terms):
                 title = os.path.basename(os.path.normpath(video_holder_path[x]))
-                logger.info("Video found at"+buf+completed_video_path_and_filename[y]+buf+"will be copied to"+buf+os.path.join(video_holder_path[x],'')+title+v_end)
-                copyfile(completed_video_path_and_filename[y], os.path.join(video_holder_path[x],'')+title+v_end)
-                for line in fileinput.input(info_check.mma_direct+'stats.txt'):
-                    temp = sys.stdout
-                    sys.stdout = open(info_check.mma_direct+'stats2.txt', 'a')
-                    if (i_dic[stat_name] in line and 'moved' in line) or ('total'in line and 'moved' in line):
-                        tmp = re.findall('[0-9]+',line)
-                        num = str(int(str(tmp[0]))+1)
-                        new = re.sub(r'[0-9]+',num, line)
-                        print(new,end='')
-                    else:
-                        print(line,end='')
-                    sys.stdout.close()
-                    sys.stdout = temp
-                os.remove(info_check.mma_direct+'stats.txt')
-                os.rename(info_check.mma_direct+'stats2.txt',info_check.mma_direct+'stats.txt')
-                logger.info("Poster will be renamed to match recently moved Main Card.")
-                for basename in os.listdir(video_holder_path[x]):
-                    if basename.endswith('.jpg'):
-                        pathname = os.path.join(video_holder_path[x], basename)
-                        if os.path.isfile(pathname):
-                            move(pathname, os.path.join(video_holder_path[x],'')+title+".jpg")
-                logger.info("nfo file will be updated, and \"Soon - \" will be removed from before the title.")
-                old_nfo = open(os.path.join(video_holder_path[x],'')+title+'.nfo','r')
-                new_nfo = open(os.path.join(video_holder_path[x],'')+title+'2.nfo', 'w')
-                for line in old_nfo:
-                    new_nfo.write(line.replace('Soon - ', ''))
-                old_nfo.close()
-                new_nfo.close()
-                os.remove(os.path.join(video_holder_path[x],'')+title+'.nfo')
-                move(os.path.join(video_holder_path[x],'')+title+'2.nfo',os.path.join(video_holder_path[x],'')+title+'.nfo')
-                logger.info(video_holder_path_and_file[x]+" will be deleted.")
+                v_end = title+v_end
+                event_direct = os.path.join(video_holder_path[x],'')
+                matched = 1
+            if matched == 1:
+                logger.info("Video found at"+buf+completed_video_path_and_filename[y]+buf+"will be copied to"+buf+dest_direct+v_end+buf+"and"+buf+video_holder_path_and_file[x]+buf+"will be deleted.")
+                copyfile(completed_video_path_and_filename[y], dest_direct+v_end)
+                stat_updater(stat_name)
                 os.remove(video_holder_path_and_file[x])
-                logger.info("Directory"+buf+os.path.join(video_holder_path[x],'')+buf+"will be moved to "+buf+user_info.tmp_dir+buf+"to aid in refreshing.")
-                move(os.path.join(video_holder_path[x],''),user_info.tmp_dir)
-                if user_info.refresh_plex == 1: plex_refresh()
-                time.sleep(30)
-                logger.info("Directories and files will be moved back to"+buf+os.path.abspath(os.path.join(video_holder_path[x], os.pardir))+buf+"in order to force pleX to refresh. The script will stop running now.")
-                for node in os.listdir(user_info.tmp_dir):
-                    if not os.path.isdir(node):
-                        move(os.path.join(user_info.tmp_dir, node) , os.path.join(os.path.abspath(os.path.join(video_holder_path[x], os.pardir)), node))
-                if user_info.refresh_plex == 1: plex_refresh()
+                if title != 'not-main':
+                    logger.info("Poster will be renamed to match recently moved Main Card video file.")
+                    for basename in os.listdir(video_holder_path[x]):
+                        if basename.endswith('.jpg'):
+                            pathname = os.path.join(video_holder_path[x], basename)
+                            if os.path.isfile(pathname):
+                                move(pathname, event_direct+title+".jpg")
+                    logger.info("nfo file will be updated, and \"Soon - \" will be removed from before the title.")
+                    old_nfo = open(event_direct+title+'.nfo','r')
+                    new_nfo = open(event_direct+title+'2.nfo', 'w')
+                    for line in old_nfo:
+                        new_nfo.write(line.replace('Soon - ', ''))
+                    old_nfo.close()
+                    new_nfo.close()
+                    os.remove(event_direct+title+'.nfo')
+                    move(event_direct+title+'2.nfo',event_direct+title+'.nfo')
+                if user_info.refresh_plex == 1:
+                    logger.info("Directory"+buf+event_direct+buf+"will be moved to "+buf+user_info.tmp_dir+buf+"to aid in refreshing.")
+                    move(event_direct,user_info.tmp_dir)
+                    time.sleep(5)
+                    plex_refresh()
+                    time.sleep(25)
+                    logger.info("Directories and files will be moved back to"+buf+os.path.abspath(os.path.join(event_direct, os.pardir))+buf+"in order to help refresh. The script will stop running now.")
+                    for node in os.listdir(user_info.tmp_dir):
+                        if not os.path.isdir(node):
+                            move(os.path.join(user_info.tmp_dir, node), os.path.join(os.path.abspath(os.path.join(event_direct, os.pardir)), node))
+                    plex_refresh()
                 if user_info.refresh_kodi == 1: kodi_refresh()
                 exit_stats()
+
+
 
 #logger.info("There were holder files in the destination directory, but there were no matching video files in your source directory. The script will stop running now.")
 exit_stats()

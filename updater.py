@@ -71,12 +71,16 @@ for try_count in range(0,2):
             log.write("\n["+time.strftime("%Y-%m-%d %H:%M:%S")+"] An attempt to run updater.py was made. However, updater.py is currently running. The script will stop running now.")
             log.close()
             exit()
-
 with open(info_check.mma_direct+'mover.running', "w") as running:
     running.write('['+time.strftime("%Y-%m-%d %H:%M:%S")+'] updater.py')
     running.close()
 
-readme = urllib.request.urlopen('https://github.com/metaMMA/metaMMA/blob/master/README.md').read().decode('utf-8')
+try:
+    readme = urllib.request.urlopen('https://github.com/metaMMA/metaMMA/blob/master/README.md').read().decode('utf-8')
+except Exception as e:
+    logger.info("ERROR: No internet connection. See error code below")
+    logger.exception(e)
+    endit()
 
 latest_version_line = re.findall(r'<p>v.*? - latest stable version</p>',readme)[0]
 latest_version_num = re.findall(r'(?<=v)[0-9].*?(?=\s-)',latest_version_line)[0]
